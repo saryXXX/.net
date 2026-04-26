@@ -18,6 +18,7 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IProduitService, ProduitService>();
 builder.Services.AddScoped<IFactureService, FactureService>();
 builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 // 2. Configure Identity
 builder.Services.AddIdentityCore<IdentityUser>(options =>
