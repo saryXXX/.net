@@ -1,0 +1,243 @@
+👥 1. Job Descriptions (3 Développeurs)
+👨‍💻 Dev 1 — Backend & Data Architect
+
+Responsabilité centrale : toute la logique métier
+
+Missions :
+Modélisation base de données (EF Core Code First)
+Gestion des relations (Client, Produit, Facture, Stock)
+Implémentation des services :
+FactureService
+StockService
+ProduitService
+Calculs :
+HT / TVA / TTC
+Décrément automatique du stock
+Migrations & DbContext
+LINQ (requêtes complexes)
+Livrables :
+Models propres
+Services testés
+Calculs fiables
+Gestion stock automatique
+🎨 Dev 2 — Frontend (Blazor UI/UX)
+
+Responsabilité : expérience utilisateur + CRUD
+
+Missions :
+Pages Blazor :
+Clients
+Produits
+Factures
+Stock
+Formulaires avec validation
+Composants réutilisables
+Navigation + layout
+Livrables :
+UI fluide
+CRUD complet
+Gestion des formulaires
+UX propre
+📊 Dev 3 — Analytics & Dashboard Engineer
+
+Responsabilité : intelligence métier
+
+Missions :
+Tableaux de bord :
+Fiscal
+Ventes
+Stock
+Requêtes analytiques (LINQ avancé)
+Intégration graphiques (Chart.js / ApexCharts)
+Filtres dynamiques
+Livrables :
+Dashboard complet
+Graphiques interactifs
+Indicateurs fiables
+🧱 2. Diagramme UML GLOBAL (avec stock)
+🟢 PlantUML complet
+@startuml
+title Application Facturation + Gestion de Stock
+
+class Client {
+    +Id : int
+    +Nom : string
+    +Prenom : string
+    +Email : string
+    +Telephone : string
+    +Adresse : string
+    +MatriculeFiscal : string
+    +DateCreation : DateTime
+}
+
+class Produit {
+    +Id : int
+    +Nom : string
+    +PrixUnitaireHT : decimal
+    +TauxTVA : decimal
+    +StockActuel : int
+    +SeuilAlerte : int
+    +Actif : bool
+}
+
+class Facture {
+    +Id : int
+    +Numero : string
+    +DateFacture : DateTime
+    +ClientId : int
+    +TotalHT : decimal
+    +TotalTVA : decimal
+    +TotalTTC : decimal
+    +TimbreFiscal : decimal
+    +Statut : string
+}
+
+class LigneFacture {
+    +Id : int
+    +FactureId : int
+    +ProduitId : int
+    +Quantite : int
+    +PrixUnitaireHT : decimal
+    +TauxTVA : decimal
+    +MontantHT : decimal
+    +MontantTVA : decimal
+    +MontantTTC : decimal
+}
+
+class MouvementStock {
+    +Id : int
+    +ProduitId : int
+    +TypeMouvement : string
+    +Quantite : int
+    +DateMouvement : DateTime
+    +Reference : string
+    +Observation : string
+}
+
+class ParametreFiscal {
+    +Id : int
+    +TimbreFiscal : decimal
+    +DateDebut : DateTime
+    +DateFin : DateTime
+}
+
+' Relations
+Client "1" -- "*" Facture
+Facture "1" -- "*" LigneFacture
+Produit "1" -- "*" LigneFacture
+Produit "1" -- "*" MouvementStock
+Facture --> Client
+LigneFacture --> Produit
+MouvementStock --> Produit
+
+@enduml
+🏃‍♂️ 3. Organisation Agile (Sprints)
+🔁 Sprint 0 — Setup (2 jours)
+Objectif :
+
+Projet fonctionnel + architecture prête
+
+Dev 1 :
+Créer DbContext
+Config EF Core
+Dev 2 :
+Layout Blazor
+Navigation
+Dev 3 :
+Choisir lib graphique
+Définir KPIs
+🔁 Sprint 1 — Core CRUD
+Dev 1 :
+Entités :
+Client
+Produit
+Migration DB
+Dev 2 :
+UI Clients
+UI Produits
+Dev 3 :
+Préparer modèles stats
+🔁 Sprint 2 — Facturation
+Dev 1 :
+Facture + LigneFacture
+Calculs (HT, TVA, TTC)
+Dev 2 :
+UI Facture
+Ajout produits dynamique
+Dev 3 :
+CA total
+TVA totale
+🔁 Sprint 3 — Stock (NOUVEAU)
+Dev 1 :
+MouvementStock
+StockService
+Décrément auto
+Dev 2 :
+UI Stock
+UI Mouvements
+Dev 3 :
+Indicateurs stock :
+rupture
+alerte
+🔁 Sprint 4 — Dashboard
+Dev 1 :
+Requêtes LINQ avancées
+Dev 2 :
+Page dashboard
+Dev 3 :
+Graphiques :
+CA par période
+TVA par taux
+stock évolution
+🔁 Sprint 5 — Finalisation
+Tous :
+Tests
+Debug
+UI polish
+📋 4. Backlog clair
+🧾 Facturation
+CRUD Facture
+Calcul automatique
+📦 Stock
+Entrée stock
+Sortie automatique
+Historique
+📊 Analytics
+CA total
+TVA
+Stock critique
+📅 5. Organisation quotidienne (Agile réel)
+Daily (10 min)
+
+Chaque dev :
+
+Done
+Doing
+Blockers
+Répartition concrète (exemple semaine)
+Dev 1 (Backend)
+Jour 1 : Models
+Jour 2 : Services
+Jour 3 : Facturation
+Jour 4 : Stock logic
+Dev 2 (Frontend)
+Jour 1 : Layout
+Jour 2 : Clients
+Jour 3 : Produits
+Jour 4 : Factures + Stock
+Dev 3 (Analytics)
+Jour 1 : KPIs
+Jour 2 : LINQ
+Jour 3 : Graphiques
+Jour 4 : Dashboard
+⚠️ 6. Points critiques (où les projets échouent)
+❌ Mélanger UI et logique métier
+❌ Calculer stock dans le frontend
+❌ Oublier les migrations
+❌ Ne pas tester les calculs
+🎯 7. Ce que vous montrez à la soutenance
+✔ CRUD complet
+✔ Facturation correcte
+✔ Stock dynamique
+✔ Dashboard pro
+✔ Architecture propre
