@@ -20,6 +20,9 @@ builder.Services.AddScoped<IFactureService, FactureService>();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
 // 2. Configure Identity
 builder.Services.AddIdentityCore<IdentityUser>(options =>
 {
@@ -40,6 +43,14 @@ var app = builder.Build();
 
 // 3. Global Exception Handling Middleware
 app.UseMiddleware<ExceptionMiddleware>();
+
+// 3b. Seed Database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    await DbSeeder.SeedAsync(context);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
