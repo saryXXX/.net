@@ -3,6 +3,24 @@
 
 <PageTitle>Analytics Dashboard</PageTitle>
 
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        transition: transform 0.2s;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+    }
+    .kpi-title {
+        color: #6c757d;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+    }
+</style>
+
 <div class="container-fluid py-4">
     <h1 class="mb-4 text-primary">Analytics & Intelligence</h1>
 
@@ -19,33 +37,33 @@
         <div class="row g-4 mb-4">
             <!-- KPI Cards -->
             <div class="col-md-3">
-                <div class="card shadow-sm border-0 bg-light">
+                <div class="card glass-card shadow-sm border-0">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase small">Total Revenue (CA)</h6>
-                        <h3 class="fw-bold">@stats.TotalCA.ToString("N3") TND</h3>
+                        <h6 class="kpi-title text-uppercase">Total Revenue (CA)</h6>
+                        <h3 class="fw-bold">@stats.TotalCA.ToString("N3") <small class="fs-6">TND</small></h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm border-0 bg-light">
+                <div class="card glass-card shadow-sm border-0">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase small">VAT Collected (TVA)</h6>
-                        <h3 class="fw-bold text-success">@stats.TotalTVA.ToString("N3") TND</h3>
+                        <h6 class="kpi-title text-uppercase">VAT Collected (TVA)</h6>
+                        <h3 class="fw-bold text-success">@stats.TotalTVA.ToString("N3") <small class="fs-6">TND</small></h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm border-0 bg-light">
+                <div class="card glass-card shadow-sm border-0">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase small">Active Invoices</h6>
+                        <h6 class="kpi-title text-uppercase">Active Invoices</h6>
                         <h3 class="fw-bold text-primary">@stats.TotalFactures</h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm border-0 bg-light">
+                <div class="card glass-card shadow-sm border-0">
                     <div class="card-body">
-                        <h6 class="text-muted text-uppercase small">Stock Alerts</h6>
+                        <h6 class="kpi-title text-uppercase">Stock Alerts</h6>
                         <h3 class="fw-bold text-danger">@stats.ProduitsEnAlerte</h3>
                     </div>
                 </div>
@@ -163,10 +181,20 @@
             stats = await statsTask;
             fiscalSummary = await fiscalTask;
             inventorySummary = await inventoryTask;
+
+            // Data Resiliency: Ensure charts don't break if no data is found
+            if (stats != null && (stats.TurnoverHistory == null || !stats.TurnoverHistory.Any()))
+            {
+                stats.TurnoverHistory = new List<ChartDataDto> { new() { Label = "No Data", Value = 0 } };
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching data: {ex.Message}");
+            // Initialize with defaults to prevent UI crash
+            stats = new DashboardStatsDto();
+            fiscalSummary = new FiscalSummaryDto();
+            inventorySummary = new InventorySummaryDto();
         }
     }
 }

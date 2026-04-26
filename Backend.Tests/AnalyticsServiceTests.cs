@@ -48,5 +48,37 @@ namespace Backend.Tests
             result.Value.TotalTVA.Should().Be(19);
             result.Value.TotalFactures.Should().Be(1);
         }
+
+        [Fact]
+        public async Task GetGeneralStatsAsync_ShouldExcludeDeletedRecords()
+        {
+            // Arrange
+            var context = GetDatabase();
+            var service = new AnalyticsService(context);
+
+            context.Factures.Add(new Facture
+            {
+                Statut = "Validée",
+                TotalTTC = 500,
+                IsDeleted = true // This should be ignored
+            });
+            
+            context.Factures.Add(new Facture
+            {
+                Statut = "Validée",
+                TotalTTC = 200,
+                IsDeleted = false // This should be counted
+            });
+
+            await context.SaveChangesAsync();
+
+            // Act
+            var result = await service.GetGeneralStatsAsync();
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.TotalCA.Should().Be(200);
+            result.Value.TotalFactures.Should().Be(1);
+        }
     }
 }
