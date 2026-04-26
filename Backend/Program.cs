@@ -17,6 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IProduitService, ProduitService>();
 builder.Services.AddScoped<IFactureService, FactureService>();
+builder.Services.AddScoped<IStockService, StockService>();
 
 // 2. Configure Identity
 builder.Services.AddIdentityCore<IdentityUser>(options =>

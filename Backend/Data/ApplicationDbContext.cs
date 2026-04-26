@@ -16,6 +16,7 @@ namespace Backend.Data
         public DbSet<Facture> Factures => Set<Facture>();
         public DbSet<LigneFacture> LigneFactures => Set<LigneFacture>();
         public DbSet<ParametreFiscal> ParametresFiscaux => Set<ParametreFiscal>();
+        public DbSet<MouvementStock> MouvementsStock => Set<MouvementStock>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +28,7 @@ namespace Backend.Data
             modelBuilder.Entity<Facture>().HasQueryFilter(f => !f.IsDeleted);
             modelBuilder.Entity<LigneFacture>().HasQueryFilter(l => !l.IsDeleted);
             modelBuilder.Entity<ParametreFiscal>().HasQueryFilter(pf => !pf.IsDeleted);
+            modelBuilder.Entity<MouvementStock>().HasQueryFilter(m => !m.IsDeleted);
         }
     }
 }

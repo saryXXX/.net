@@ -17,10 +17,12 @@ namespace Backend.Services
     public class FactureService : IFactureService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IStockService _stockService;
 
-        public FactureService(ApplicationDbContext context)
+        public FactureService(ApplicationDbContext context, IStockService stockService)
         {
             _context = context;
+            _stockService = stockService;
         }
 
         public async Task<Result<IEnumerable<Facture>>> GetAllAsync()
@@ -101,7 +103,22 @@ namespace Backend.Services
 
             facture.Statut = "Validée";
             
-            // Phase 3: Stock Decrement will be hooked here
+            // Phase 3: Stock Decrement Automation
+            foreach (var ligne in facture.Lignes)
+            {
+                var stockResult = await _stockService.AjusterStockAsync(
+                    ligne.ProduitId, 
+                    ligne.Quantite, 
+                    "Sortie", 
+                    facture.Numero, 
+                    $"Facture {facture.Numero} validée."
+                );
+
+                if (!stockResult.IsSuccess)
+                {
+                    // Optionally log or handle if stock adjustment fails
+                }
+            }
             
             await _context.SaveChangesAsync();
             return Result.Success();
