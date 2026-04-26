@@ -22,4 +22,16 @@ namespace Backend.DTOs
         public int TotalSold { get; set; }
         public decimal TotalRevenue { get; set; }
     }
+
+    public class StockStatusDto
+    {
+        public string Status { get; set; } = string.Empty; // En Stock, Alerte, Rupture
+        public int Count { get; set; }
+    }
+
+    public class TvaRateDto
+    {
+        public decimal Rate { get; set; }
+        public decimal TotalTva { get; set; }
+    }
 }

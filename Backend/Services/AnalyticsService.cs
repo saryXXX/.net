@@ -24,22 +24,22 @@ namespace Backend.Services
         {
             try
             {
-                // Only count validated invoices for financial stats
+                // Only count non-deleted and validated invoices for financial stats
                 var validatedFactures = _context.Factures
-                    .Where(f => f.Statut == "Validée" || f.Statut == "Payée");
+                    .Where(f => !f.IsDeleted && (f.Statut == "Validée" || f.Statut == "Payée"));
 
                 var stats = new DashboardStatsDto
                 {
                     TotalCA = await validatedFactures.SumAsync(f => f.TotalTTC),
                     TotalTVA = await validatedFactures.SumAsync(f => f.TotalTVA),
                     TotalFactures = await validatedFactures.CountAsync(),
-                    ProduitsEnAlerte = await _context.Produits.CountAsync(p => p.StockActuel <= p.SeuilAlerte)
+                    ProduitsEnAlerte = await _context.Produits.CountAsync(p => !p.IsDeleted && p.StockActuel <= p.SeuilAlerte)
                 };
 
                 // Top 5 Products
                 stats.TopProducts = await _context.LigneFactures
                     .Include(l => l.Facture)
-                    .Where(l => l.Facture!.Statut == "Validée" || l.Facture!.Statut == "Payée")
+                    .Where(l => !l.IsDeleted && !l.Facture!.IsDeleted && (l.Facture!.Statut == "Validée" || l.Facture!.Statut == "Payée"))
                     .GroupBy(l => l.Produit != null ? l.Produit.Nom : "Inconnu")
                     .Select(g => new TopProductDto
                     {
@@ -78,7 +78,7 @@ namespace Backend.Services
             try
             {
                 var data = await _context.Factures
-                    .Where(f => (f.Statut == "Validée" || f.Statut == "Payée") && f.DateFacture.Year == year)
+                    .Where(f => !f.IsDeleted && (f.Statut == "Validée" || f.Statut == "Payée") && f.DateFacture.Year == year)
                     .GroupBy(f => f.DateFacture.Month)
                     .Select(g => new ChartDataDto
                     {
