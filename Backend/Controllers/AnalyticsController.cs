@@ -29,5 +29,13 @@ namespace Backend.Controllers
             if (!result.IsSuccess) return BadRequest(result.Error);
             return Ok(result.Value);
         }
+
+        [HttpGet("fiscal")]
+        public async Task<IActionResult> GetFiscalReport([FromQuery] DateTime? start, [FromQuery] DateTime? end)
+        {
+            var result = await _analyticsService.GetFiscalSummaryAsync(start, end);
+            if (!result.IsSuccess) return BadRequest(result.Error);
+            return Ok(result.Value);
+        }
     }
 }

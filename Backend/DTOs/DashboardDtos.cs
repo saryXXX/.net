@@ -34,4 +34,13 @@ namespace Backend.DTOs
         public decimal Rate { get; set; }
         public decimal TotalTva { get; set; }
     }
+
+    public class FiscalSummaryDto
+    {
+        public decimal TotalHT { get; set; }
+        public decimal TotalTVA { get; set; }
+        public decimal TotalTTC { get; set; }
+        public int FactureCount { get; set; }
+        public List<TvaRateDto> TvaDetails { get; set; } = new();
+    }
 }

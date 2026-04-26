@@ -9,6 +9,7 @@ namespace Backend.Services
     {
         Task<Result<DashboardStatsDto>> GetGeneralStatsAsync();
         Task<Result<List<ChartDataDto>>> GetTurnoverByMonthAsync(int year);
+        Task<Result<FiscalSummaryDto>> GetFiscalSummaryAsync(DateTime? startDate, DateTime? endDate);
     }
 
     public class AnalyticsService : IAnalyticsService
@@ -93,6 +94,51 @@ namespace Backend.Services
             catch (Exception ex)
             {
                 return Result<List<ChartDataDto>>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Result<FiscalSummaryDto>> GetFiscalSummaryAsync(DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                var query = _context.Factures
+                    .Where(f => !f.IsDeleted && (f.Statut == "Validée" || f.Statut == "Payée"));
+
+                if (startDate.HasValue)
+                    query = query.Where(f => f.DateFacture >= startDate.Value);
+                
+                if (endDate.HasValue)
+                    query = query.Where(f => f.DateFacture <= endDate.Value);
+
+                var summary = new FiscalSummaryDto
+                {
+                    TotalHT = await query.SumAsync(f => f.TotalHT),
+                    TotalTVA = await query.SumAsync(f => f.TotalTVA),
+                    TotalTTC = await query.SumAsync(f => f.TotalTTC),
+                    FactureCount = await query.CountAsync()
+                };
+
+                // Detailed TVA by rate (from LigneFactures)
+                summary.TvaDetails = await _context.LigneFactures
+                    .Include(l => l.Facture)
+                    .Where(l => !l.IsDeleted && !l.Facture!.IsDeleted && 
+                               (l.Facture.Statut == "Validée" || l.Facture.Statut == "Payée"))
+                    .Where(l => (!startDate.HasValue || l.Facture.DateFacture >= startDate.Value) &&
+                               (!endDate.HasValue || l.Facture.DateFacture <= endDate.Value))
+                    .GroupBy(l => l.TauxTVA)
+                    .Select(g => new TvaRateDto
+                    {
+                        Rate = g.Key,
+                        TotalTva = g.Sum(x => x.MontantTVA)
+                    })
+                    .OrderBy(x => x.Rate)
+                    .ToListAsync();
+
+                return Result<FiscalSummaryDto>.Success(summary);
+            }
+            catch (Exception ex)
+            {
+                return Result<FiscalSummaryDto>.Failure(ex.Message);
             }
         }
     }
