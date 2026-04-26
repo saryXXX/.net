@@ -29,6 +29,13 @@ namespace Backend.Data
             modelBuilder.Entity<LigneFacture>().HasQueryFilter(l => !l.IsDeleted);
             modelBuilder.Entity<ParametreFiscal>().HasQueryFilter(pf => !pf.IsDeleted);
             modelBuilder.Entity<MouvementStock>().HasQueryFilter(m => !m.IsDeleted);
+
+            // Optimization Indexes
+            modelBuilder.Entity<Facture>().HasIndex(f => f.DateFacture);
+            modelBuilder.Entity<Facture>().HasIndex(f => f.ClientId);
+            modelBuilder.Entity<Facture>().HasIndex(f => f.Numero).IsUnique();
+            modelBuilder.Entity<MouvementStock>().HasIndex(m => m.ProduitId);
+            modelBuilder.Entity<Produit>().HasIndex(p => p.Nom);
         }
     }
 }
