@@ -10,6 +10,7 @@ namespace Backend.Services
         Task<Result<DashboardStatsDto>> GetGeneralStatsAsync();
         Task<Result<List<ChartDataDto>>> GetTurnoverByMonthAsync(int year);
         Task<Result<FiscalSummaryDto>> GetFiscalSummaryAsync(DateTime? startDate, DateTime? endDate);
+        Task<Result<InventorySummaryDto>> GetInventorySummaryAsync();
     }
 
     public class AnalyticsService : IAnalyticsService
@@ -139,6 +140,35 @@ namespace Backend.Services
             catch (Exception ex)
             {
                 return Result<FiscalSummaryDto>.Failure(ex.Message);
+            }
+        }
+
+        public async Task<Result<InventorySummaryDto>> GetInventorySummaryAsync()
+        {
+            try
+            {
+                var activeProduits = _context.Produits.Where(p => !p.IsDeleted);
+
+                var summary = new InventorySummaryDto
+                {
+                    TotalProducts = await activeProduits.CountAsync(),
+                    OutOfStockCount = await activeProduits.CountAsync(p => p.StockActuel <= 0),
+                    LowStockCount = await activeProduits.CountAsync(p => p.StockActuel > 0 && p.StockActuel <= p.SeuilAlerte),
+                    TotalInventoryValue = await activeProduits.SumAsync(p => p.StockActuel * p.PrixUnitaireHT)
+                };
+
+                summary.StatusBreakdown = new List<StockStatusDto>
+                {
+                    new StockStatusDto { Status = "Rupture", Count = summary.OutOfStockCount },
+                    new StockStatusDto { Status = "Alerte", Count = summary.LowStockCount },
+                    new StockStatusDto { Status = "En Stock", Count = summary.TotalProducts - summary.OutOfStockCount - summary.LowStockCount }
+                };
+
+                return Result<InventorySummaryDto>.Success(summary);
+            }
+            catch (Exception ex)
+            {
+                return Result<InventorySummaryDto>.Failure(ex.Message);
             }
         }
     }

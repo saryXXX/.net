@@ -29,6 +29,15 @@ namespace Backend.DTOs
         public int Count { get; set; }
     }
 
+    public class InventorySummaryDto
+    {
+        public decimal TotalInventoryValue { get; set; }
+        public int TotalProducts { get; set; }
+        public int OutOfStockCount { get; set; }
+        public int LowStockCount { get; set; }
+        public List<StockStatusDto> StatusBreakdown { get; set; } = new();
+    }
+
     public class TvaRateDto
     {
         public decimal Rate { get; set; }

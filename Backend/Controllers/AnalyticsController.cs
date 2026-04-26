@@ -37,5 +37,13 @@ namespace Backend.Controllers
             if (!result.IsSuccess) return BadRequest(result.Error);
             return Ok(result.Value);
         }
+
+        [HttpGet("inventory")]
+        public async Task<IActionResult> GetInventoryReport()
+        {
+            var result = await _analyticsService.GetInventorySummaryAsync();
+            if (!result.IsSuccess) return BadRequest(result.Error);
+            return Ok(result.Value);
+        }
     }
 }
