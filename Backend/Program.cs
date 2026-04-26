@@ -1,5 +1,6 @@
 using Backend.Data;
 using Backend.Middleware;
+using Backend.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,11 @@ builder.Services.AddControllers();
 
 // 1. Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 1b. Register Services
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IProduitService, ProduitService>();
 
 // 2. Configure Identity
 builder.Services.AddIdentityCore<IdentityUser>(options =>
