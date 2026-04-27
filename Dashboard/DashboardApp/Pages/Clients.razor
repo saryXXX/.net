@@ -3,6 +3,7 @@
 @using DashboardApp.Services
 @using Dashboard.Shared.DTOs
 @inject IClientService ClientService
+@inject IInvoiceService InvoiceService
 @inject ToastService ToastService
 
 <PageTitle>Customer Management</PageTitle>
@@ -66,7 +67,7 @@
                         <div class="card-footer bg-light border-0 py-3 px-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="x-small text-muted">Created: @client.DateCreation.ToShortDateString()</span>
-                                <a href="#" class="btn btn-sm btn-link text-decoration-none fw-bold p-0">View History</a>
+                                <button class="btn btn-sm btn-link text-decoration-none fw-bold p-0" @onclick="() => ShowHistory(client)">View History</button>
                             </div>
                         </div>
                     </div>
@@ -75,6 +76,55 @@
         </div>
     }
 </div>
+
+@if (showHistoryModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4 p-2">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Invoice History</h5>
+                    <button type="button" class="btn-close" @onclick="() => showHistoryModal = false"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="text-muted small mb-3">Recent invoices for <strong>@selectedClient?.Prenom @selectedClient?.Nom</strong></p>
+                    @if (clientInvoices == null)
+                    {
+                        <p class="text-center py-3 text-muted">Loading history...</p>
+                    }
+                    else if (!clientInvoices.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-folder2-open fs-2 text-muted opacity-50"></i>
+                            <p class="text-muted mt-2">No invoices found for this client.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var inv in clientInvoices)
+                            {
+                                <div class="list-group-item px-0 border-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@inv.Numero</div>
+                                        <div class="x-small text-muted">@inv.DateFacture.ToShortDateString()</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">@inv.TotalTTC.ToString("N3") TND</div>
+                                        <span class="badge rounded-pill bg-light text-dark x-small">@inv.Statut</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <button class="btn btn-light rounded-pill w-100 mt-4 fw-bold" @onclick="() => showHistoryModal = false">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @if (showModal)
 {
@@ -146,7 +196,10 @@
 @code {
     private List<ClientDto>? clients;
     private bool showModal = false;
+    private bool showHistoryModal = false;
     private ClientDto currentClient = new();
+    private ClientDto? selectedClient;
+    private List<InvoiceDto>? clientInvoices;
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,6 +209,16 @@
     private async Task LoadClients()
     {
         clients = await ClientService.GetAllAsync();
+    }
+
+    private async Task ShowHistory(ClientDto client)
+    {
+        selectedClient = client;
+        showHistoryModal = true;
+        clientInvoices = null; // Loading state
+        
+        var allInvoices = await InvoiceService.GetAllAsync();
+        clientInvoices = allInvoices.Where(i => i.ClientId == client.Id).OrderByDescending(i => i.DateFacture).ToList();
     }
 
     private void ShowAddModal()

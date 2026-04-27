@@ -1,5 +1,6 @@
 using Backend.Models;
 using Backend.Services;
+using Dashboard.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,22 @@ namespace Backend.Controllers
         {
             var result = await _factureService.GetAllAsync();
             if (!result.IsSuccess) return BadRequest(result.Error);
-            return Ok(result.Value);
+
+            var dtos = result.Value.Select(f => new InvoiceDto
+            {
+                Id = f.Id,
+                Numero = f.Numero,
+                DateFacture = f.DateFacture,
+                ClientId = f.ClientId,
+                ClientName = f.Client != null ? $"{f.Client.Prenom} {f.Client.Nom}" : "Unknown",
+                TotalHT = f.TotalHT,
+                TotalTVA = f.TotalTVA,
+                TotalTTC = f.TotalTTC,
+                TimbreFiscal = f.TimbreFiscal,
+                Statut = f.Statut
+            }).ToList();
+
+            return Ok(dtos);
         }
 
         [HttpGet("{id}")]
@@ -30,7 +46,35 @@ namespace Backend.Controllers
         {
             var result = await _factureService.GetByIdAsync(id);
             if (!result.IsSuccess) return NotFound(result.Error);
-            return Ok(result.Value);
+
+            var f = result.Value;
+            var dto = new InvoiceDto
+            {
+                Id = f.Id,
+                Numero = f.Numero,
+                DateFacture = f.DateFacture,
+                ClientId = f.ClientId,
+                ClientName = f.Client != null ? $"{f.Client.Prenom} {f.Client.Nom}" : "Unknown",
+                TotalHT = f.TotalHT,
+                TotalTVA = f.TotalTVA,
+                TotalTTC = f.TotalTTC,
+                TimbreFiscal = f.TimbreFiscal,
+                Statut = f.Statut,
+                Lignes = f.Lignes.Select(l => new InvoiceLineDto
+                {
+                    Id = l.Id,
+                    ProduitId = l.ProduitId,
+                    ProductName = l.Produit?.Nom,
+                    Quantite = l.Quantite,
+                    PrixUnitaireHT = l.PrixUnitaireHT,
+                    TauxTVA = l.TauxTVA,
+                    MontantHT = l.MontantHT,
+                    MontantTVA = l.MontantTVA,
+                    MontantTTC = l.MontantTTC
+                }).ToList()
+            };
+
+            return Ok(dto);
         }
 
         [HttpPost]

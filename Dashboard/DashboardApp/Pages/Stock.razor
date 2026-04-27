@@ -114,7 +114,7 @@
                                         </div>
                                     </td>
                                     <td class="pe-4 text-end">
-                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3">Update</button>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" @onclick="() => ShowAdjustModal(prod)">Update</button>
                                     </td>
                                 </tr>
                             }
@@ -126,6 +126,30 @@
     }
 </div>
 
+@if (showAdjustModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow rounded-4 p-2">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Adjust Stock</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAdjustModal = false"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="text-muted small mb-3">Updating stock for <strong>@selectedProduct?.Nom</strong></p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Current Quantity</label>
+                        <input type="number" class="form-control rounded-3" @bind="newStock" />
+                    </div>
+                    <button class="btn btn-primary rounded-pill w-100 fw-bold" @onclick="SaveStockAdjustment">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <style>
     .line-height-1 { line-height: 1; }
     .x-small { font-size: 0.75rem; }
@@ -133,11 +157,47 @@
     .bg-danger-subtle { background-color: #fee2e2; }
 </style>
 
+@inject ToastService ToastService
+
 @code {
     private List<ProduitDto>? products;
+    private bool showAdjustModal = false;
+    private ProduitDto? selectedProduct;
+    private int newStock;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
         products = await ProductService.GetAllAsync();
+    }
+
+    private void ShowAdjustModal(ProduitDto prod)
+    {
+        selectedProduct = prod;
+        newStock = prod.StockActuel;
+        showAdjustModal = true;
+    }
+
+    private async Task SaveStockAdjustment()
+    {
+        if (selectedProduct == null) return;
+
+        selectedProduct.StockActuel = newStock;
+        var success = await ProductService.UpdateAsync(selectedProduct);
+        
+        if (success)
+        {
+            ToastService.ShowSuccess($"Stock updated for {selectedProduct.Nom}");
+            showAdjustModal = false;
+            await LoadProducts();
+        }
+        else
+        {
+            ToastService.ShowError("Failed to update stock.");
+        }
     }
 }

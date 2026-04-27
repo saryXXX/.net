@@ -46,8 +46,8 @@
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        <div class="product-icon me-3">
-                                            <i class="bi bi-box-seam text-primary"></i>
+                                        <div class="product-icon-container me-3">
+                                            <i class="bi bi-box-fill text-primary"></i>
                                         </div>
                                         <div>
                                             <div class="fw-bold text-dark">@prod.Nom</div>
@@ -78,12 +78,14 @@
                                     }
                                 </td>
                                 <td class="pe-4 text-end">
-                                    <button class="btn btn-icon btn-light btn-sm rounded-circle me-1" title="Edit" @onclick="() => ShowEditModal(prod)">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-light-danger btn-sm rounded-circle" title="Delete" @onclick="() => ConfirmDelete(prod)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="btn-group shadow-sm rounded-3 overflow-hidden">
+                                        <button class="btn btn-white btn-sm px-3 border-end" title="Edit" @onclick="() => ShowEditModal(prod)">
+                                            <i class="bi bi-pencil-square text-primary"></i>
+                                        </button>
+                                        <button class="btn btn-white btn-sm px-3" title="Delete" @onclick="() => ConfirmDelete(prod)">
+                                            <i class="bi bi-trash3-fill text-danger"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -152,23 +154,28 @@
 }
 
 <style>
-    .product-icon {
-        width: 40px;
-        height: 40px;
-        background: #f0f7ff;
-        border-radius: 10px;
+    .product-icon-container {
+        width: 42px;
+        height: 42px;
+        background: #f8fbff;
+        border: 1px solid #eef4ff;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 1.25rem;
+    }
+    .btn-white {
+        background: white;
+        border: 1px solid #f1f1f1;
+    }
+    .btn-white:hover {
+        background: #f9f9f9;
     }
     .x-small { font-size: 0.75rem; }
     .bg-danger-subtle { background-color: #fee2e2; }
     .bg-warning-subtle { background-color: #fef3c7; }
     .bg-success-subtle { background-color: #dcfce7; }
-    .btn-light-danger { background-color: #f8f9fa; color: #dc3545; }
-    .btn-light-danger:hover { background-color: #dc3545; color: white; }
-    .btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 </style>
 
 @code {
