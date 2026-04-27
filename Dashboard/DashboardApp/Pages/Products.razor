@@ -17,8 +17,25 @@
         <button class="btn btn-brand-green shadow-sm rounded-pill px-4 fw-bold" @onclick="ShowAddModal">
             <i class="bi bi-plus-lg me-2"></i> Add New Product
         </button>
-
     </div>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-6 col-lg-4">
+            <div class="input-group filter-bar shadow-sm rounded-pill overflow-hidden bg-white border">
+                <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search products..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <select class="form-select shadow-sm rounded-pill border-0 px-4 bg-white" @bind="statusFilter">
+                <option value="All">All Statuses</option>
+                <option value="In Stock">In Stock</option>
+                <option value="Low Stock">Low Stock</option>
+                <option value="Out of Stock">Out of Stock</option>
+            </select>
+        </div>
+    </div>
+
 
     @if (products == null)
     {
@@ -45,8 +62,9 @@
                     </thead>
 
                     <tbody>
-                        @foreach (var prod in products)
+                        @foreach (var prod in FilteredProducts)
                         {
+
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
@@ -218,12 +236,37 @@
     .bg-danger-subtle { background-color: #fee2e2; color: #dc2626; }
     .bg-warning-subtle { background-color: #fef3c7; color: #d97706; }
     .bg-success-subtle { background-color: #dcfce7; color: #16a34a; }
+
+    .filter-bar {
+        transition: all 0.2s;
+    }
+    .filter-bar:focus-within {
+        border-color: #249863 !important;
+        box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1) !important;
+    }
+    .form-select:focus {
+        border-color: #249863;
+        box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1);
+    }
 </style>
+
 
 
 @code {
     private List<ProduitDto>? products;
+    private string searchTerm = "";
+    private string statusFilter = "All";
+    private IEnumerable<ProduitDto> FilteredProducts => 
+        products?.Where(p => 
+            (string.IsNullOrWhiteSpace(searchTerm) || (p.Nom?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+            (statusFilter == "All" || 
+             (statusFilter == "In Stock" && p.StockActuel > p.SeuilAlerte) ||
+             (statusFilter == "Low Stock" && p.StockActuel > 0 && p.StockActuel <= p.SeuilAlerte) ||
+             (statusFilter == "Out of Stock" && p.StockActuel <= 0)))
+        ?? Enumerable.Empty<ProduitDto>();
+
     private bool showModal = false;
+
     private bool showDeleteConfirm = false;
     private ProduitDto currentProduct = new();
     private ProduitDto? productToDelete;

@@ -19,6 +19,25 @@
         </button>
     </div>
 
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-6 col-lg-4">
+            <div class="input-group filter-bar shadow-sm rounded-pill overflow-hidden bg-white border">
+                <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search by number or client..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <select class="form-select shadow-sm rounded-pill border-0 px-4 bg-white" @bind="statusFilter">
+                <option value="All">All Statuses</option>
+                <option value="Brouillon">Draft (Brouillon)</option>
+                <option value="Validée">Validated (Validée)</option>
+                <option value="Payée">Paid (Payée)</option>
+            </select>
+        </div>
+    </div>
+
+
     @if (invoices == null)
     {
         <div class="d-flex justify-content-center py-5">
@@ -43,8 +62,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var inv in invoices)
+                        @foreach (var inv in FilteredInvoices)
                         {
+
                             <tr>
                                 <td class="ps-4">
                                     <div class="fw-bold text-dark">@inv.Numero</div>
@@ -104,10 +124,33 @@
     .bg-draft { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .bg-validated { background-color: #e8f5e9; color: #2e7d32; }
     .bg-paid { background-color: #e3f2fd; color: #1565c0; }
+
+    .filter-bar {
+        transition: all 0.2s;
+    }
+    .filter-bar:focus-within {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+    }
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
 </style>
+
 
 @code {
     private List<InvoiceDto>? invoices;
+    private string searchTerm = "";
+    private string statusFilter = "All";
+    private IEnumerable<InvoiceDto> FilteredInvoices => 
+        invoices?.Where(i => 
+            (string.IsNullOrWhiteSpace(searchTerm) || 
+             (i.Numero?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
+             (i.ClientName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+            (statusFilter == "All" || i.Statut == statusFilter))
+        ?? Enumerable.Empty<InvoiceDto>();
+
 
     protected override async Task OnInitializedAsync()
     {

@@ -19,6 +19,16 @@
         </button>
     </div>
 
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group filter-bar shadow-sm rounded-pill overflow-hidden bg-white border">
+                <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search by name, email or Tax ID..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+
     @if (clients == null)
     {
         <div class="d-flex justify-content-center py-5">
@@ -30,8 +40,9 @@
     else
     {
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-            @foreach (var client in clients)
+            @foreach (var client in FilteredClients)
             {
+
                 <div class="col">
                     <div class="card border-0 shadow-sm rounded-4 h-100 id-card overflow-hidden">
                         <div class="card-body p-0">
@@ -277,11 +288,31 @@
         background: #249863;
         color: white;
     }
+
+    .filter-bar {
+        max-width: 450px;
+        transition: all 0.2s;
+    }
+    .filter-bar:focus-within {
+        border-color: #249863 !important;
+        box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1) !important;
+    }
 </style>
+
 
 @code {
     private List<ClientDto>? clients;
+    private string searchTerm = "";
+    private IEnumerable<ClientDto> FilteredClients => 
+        clients?.Where(c => string.IsNullOrWhiteSpace(searchTerm) || 
+            (c.Nom?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
+            (c.Prenom?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
+            (c.Email?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
+            (c.MatriculeFiscal?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) 
+        ?? Enumerable.Empty<ClientDto>();
+
     private bool showModal = false;
+
     private bool showHistoryModal = false;
     private ClientDto currentClient = new();
     private ClientDto? selectedClient;

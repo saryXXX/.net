@@ -79,10 +79,23 @@
         </div>
 
         <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-white border-0 pt-4 px-4">
+            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0">Full Inventory Status</h5>
+                <div class="d-flex gap-2">
+                    <div class="input-group input-group-sm filter-bar shadow-sm rounded-pill overflow-hidden bg-white border" style="width: 250px;">
+                        <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-0 bg-transparent" placeholder="Search product..." @bind="searchTerm" @bind:event="oninput" />
+                    </div>
+                    <select class="form-select form-select-sm shadow-sm rounded-pill border-0 px-3 bg-light" style="width: 150px;" @bind="statusFilter">
+                        <option value="All">All Health</option>
+                        <option value="Healthy">Healthy</option>
+                        <option value="Low">Low Stock</option>
+                        <option value="Out">Out of Stock</option>
+                    </select>
+                </div>
             </div>
             <div class="card-body p-0">
+
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
@@ -95,8 +108,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var prod in products)
+                            @foreach (var prod in FilteredProducts)
                             {
+
                                 <tr>
                                     <td class="ps-4">
                                         <div class="fw-bold">@prod.Nom</div>
@@ -155,13 +169,31 @@
     .x-small { font-size: 0.75rem; }
     .icon-sm { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
     .bg-danger-subtle { background-color: #fee2e2; }
+    
+    .filter-bar:focus-within {
+        border-color: #249863 !important;
+        box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1) !important;
+    }
 </style>
+
 
 @inject ToastService ToastService
 
 @code {
     private List<ProduitDto>? products;
+    private string searchTerm = "";
+    private string statusFilter = "All";
+    private IEnumerable<ProduitDto> FilteredProducts => 
+        products?.Where(p => 
+            (string.IsNullOrWhiteSpace(searchTerm) || (p.Nom?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+            (statusFilter == "All" || 
+             (statusFilter == "Healthy" && p.StockActuel > p.SeuilAlerte) ||
+             (statusFilter == "Low" && p.StockActuel > 0 && p.StockActuel <= p.SeuilAlerte) ||
+             (statusFilter == "Out" && p.StockActuel <= 0)))
+        ?? Enumerable.Empty<ProduitDto>();
+
     private bool showAdjustModal = false;
+
     private ProduitDto? selectedProduct;
     private int newStock;
 
