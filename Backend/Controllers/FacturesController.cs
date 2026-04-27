@@ -125,9 +125,17 @@ namespace Backend.Controllers
             var oldStatut = facture.Statut;
             facture.ClientId = dto.ClientId;
             facture.DateFacture = dto.DateFacture;
-            facture.Statut = dto.Statut;
             
-            // Simple approach: clear lines and re-add (if not validated)
+            // If the status is changing to Validée, we handle it separately via ValidateFactureAsync
+            // to avoid "Invoice already validated" error during the same transaction scope.
+            bool triggerValidation = (oldStatut == "Brouillon" && dto.Statut == "Validée");
+            
+            if (!triggerValidation)
+            {
+                facture.Statut = dto.Statut;
+            }
+
+            // Simple approach: clear lines and re-add 
             facture.Lignes.Clear();
             foreach (var l in dto.Lignes)
             {
@@ -143,8 +151,7 @@ namespace Backend.Controllers
             var saveResult = await _factureService.CreateFactureAsync(facture); 
             if (!saveResult.IsSuccess) return BadRequest(saveResult.Error);
 
-            // If status changed to Validée and it wasn't before, trigger stock adjustment
-            if (oldStatut == "Brouillon" && dto.Statut == "Validée")
+            if (triggerValidation)
             {
                 var validationResult = await _factureService.ValidateFactureAsync(id);
                 if (!validationResult.IsSuccess) return BadRequest("Saved but failed to adjust stock: " + validationResult.Error);
