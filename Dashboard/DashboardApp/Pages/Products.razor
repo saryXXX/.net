@@ -1,0 +1,234 @@
+@page "/products"
+@attribute [Authorize]
+@using DashboardApp.Services
+@using Dashboard.Shared.DTOs
+@inject IProductService ProductService
+
+<PageTitle>Products Management</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800 fw-bold">Inventory & Products</h1>
+            <p class="text-muted small mb-0">Manage your product catalog and stock levels.</p>
+        </div>
+        <button class="btn btn-primary shadow-sm rounded-pill px-4" @onclick="ShowAddModal">
+            <i class="bi bi-plus-lg me-2"></i> Add New Product
+        </button>
+    </div>
+
+    @if (products == null)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Product Name</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted text-end">Price (HT)</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">VAT</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">Stock</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">Status</th>
+                            <th class="pe-4 py-3 text-end text-uppercase small fw-bold text-muted">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var prod in products)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="product-icon me-3">
+                                            <i class="bi bi-box-seam text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@prod.Nom</div>
+                                            <div class="text-muted x-small">ID: #@prod.Id.ToString("D4")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end fw-medium">@prod.PrixUnitaireHT.ToString("N3") <small class="text-muted">TND</small></td>
+                                <td class="text-center"><span class="badge bg-light text-dark border">@prod.TauxTVA%</span></td>
+                                <td class="text-center">
+                                    <div class="fw-bold @(prod.StockActuel <= prod.SeuilAlerte ? "text-danger" : "text-dark")">
+                                        @prod.StockActuel
+                                    </div>
+                                    <div class="x-small text-muted">Min: @prod.SeuilAlerte</div>
+                                </td>
+                                <td class="text-center">
+                                    @if (prod.StockActuel <= 0)
+                                    {
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger px-3">Out of Stock</span>
+                                    }
+                                    else if (prod.StockActuel <= prod.SeuilAlerte)
+                                    {
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning px-3">Low Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-success-subtle text-success px-3">In Stock</span>
+                                    }
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-icon btn-light btn-sm rounded-circle me-1" title="Edit" @onclick="() => ShowEditModal(prod)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-light-danger btn-sm rounded-circle" title="Delete" @onclick="() => ConfirmDelete(prod)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4 p-2">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">@(currentProduct.Id == 0 ? "Add Product" : "Edit Product")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="currentProduct" OnValidSubmit="SaveProduct">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Product Name</label>
+                            <InputText @bind-Value="currentProduct.Nom" class="form-control rounded-3" placeholder="e.g. Wireless Mouse" />
+                            <ValidationMessage For="@(() => currentProduct.Nom)" class="text-danger small" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Unit Price (HT)</label>
+                                <div class="input-group">
+                                    <InputNumber @bind-Value="currentProduct.PrixUnitaireHT" class="form-control rounded-3" />
+                                    <span class="input-group-text bg-transparent border-start-0 text-muted small">TND</span>
+                                </div>
+                                <ValidationMessage For="@(() => currentProduct.PrixUnitaireHT)" class="text-danger small" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">VAT Rate (%)</label>
+                                <InputNumber @bind-Value="currentProduct.TauxTVA" class="form-control rounded-3" />
+                                <ValidationMessage For="@(() => currentProduct.TauxTVA)" class="text-danger small" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Initial Stock</label>
+                                <InputNumber @bind-Value="currentProduct.StockActuel" class="form-control rounded-3" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Alert Threshold</label>
+                                <InputNumber @bind-Value="currentProduct.SeuilAlerte" class="form-control rounded-3" />
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="button" class="btn btn-light rounded-pill px-4 flex-grow-1" @onclick="CloseModal">Cancel</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 flex-grow-1">Save Product</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .product-icon {
+        width: 40px;
+        height: 40px;
+        background: #f0f7ff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .x-small { font-size: 0.75rem; }
+    .bg-danger-subtle { background-color: #fee2e2; }
+    .bg-warning-subtle { background-color: #fef3c7; }
+    .bg-success-subtle { background-color: #dcfce7; }
+    .btn-light-danger { background-color: #f8f9fa; color: #dc3545; }
+    .btn-light-danger:hover { background-color: #dc3545; color: white; }
+    .btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+
+@code {
+    private List<ProduitDto>? products;
+    private bool showModal = false;
+    private ProduitDto currentProduct = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        products = await ProductService.GetAllAsync();
+    }
+
+    private void ShowAddModal()
+    {
+        currentProduct = new ProduitDto();
+        showModal = true;
+    }
+
+    private void ShowEditModal(ProduitDto prod)
+    {
+        // Clone the product to avoid direct mutation of the list before saving
+        currentProduct = new ProduitDto
+        {
+            Id = prod.Id,
+            Nom = prod.Nom,
+            PrixUnitaireHT = prod.PrixUnitaireHT,
+            TauxTVA = prod.TauxTVA,
+            StockActuel = prod.StockActuel,
+            SeuilAlerte = prod.SeuilAlerte,
+            Actif = prod.Actif
+        };
+        showModal = true;
+    }
+
+    private async Task SaveProduct()
+    {
+        bool success;
+        if (currentProduct.Id == 0)
+            success = await ProductService.CreateAsync(currentProduct);
+        else
+            success = await ProductService.UpdateAsync(currentProduct);
+
+        if (success)
+        {
+            showModal = false;
+            await LoadProducts();
+        }
+    }
+
+    private async Task ConfirmDelete(ProduitDto prod)
+    {
+        // Simple confirmation for now
+        var success = await ProductService.DeleteAsync(prod.Id);
+        if (success) await LoadProducts();
+    }
+
+    private void CloseModal() => showModal = false;
+}
