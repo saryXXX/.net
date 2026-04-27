@@ -1,0 +1,257 @@
+@page "/invoices/new"
+@page "/invoices/edit/{Id:int}"
+@attribute [Authorize]
+@using DashboardApp.Services
+@using Dashboard.Shared.DTOs
+@inject IInvoiceService InvoiceService
+@inject IClientService ClientService
+@inject IProductService ProductService
+@inject ToastService ToastService
+@inject NavigationManager Navigation
+
+<PageTitle>@(Id == 0 ? "New Invoice" : "Edit Invoice")</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="mb-4 d-flex align-items-center">
+        <button class="btn btn-icon btn-light rounded-circle me-3" @onclick='() => Navigation.NavigateTo("/invoices")'>
+            <i class="bi bi-arrow-left"></i>
+        </button>
+        <div>
+            <h1 class="h3 mb-0 text-gray-800 fw-bold">@(Id == 0 ? "Create New Invoice" : $"Edit Invoice {invoice.Numero}")</h1>
+            <p class="text-muted small mb-0">Fill in the details below to generate an invoice.</p>
+        </div>
+    </div>
+
+    <EditForm Model="invoice" OnValidSubmit="SaveInvoice">
+        <DataAnnotationsValidator />
+        
+        <div class="row">
+            <!-- Left Side: Basic Info -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Select Customer</label>
+                            <select class="form-select rounded-3" @bind="invoice.ClientId">
+                                <option value="0">-- Choose Client --</option>
+                                @if (clients != null)
+                                {
+                                    @foreach (var c in clients)
+                                    {
+                                        <option value="@c.Id">@c.Prenom @c.Nom</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Invoice Date</label>
+                            <InputDate @bind-Value="invoice.DateFacture" class="form-control rounded-3" />
+                        </div>
+                    </div>
+
+                    <hr class="my-4 opacity-5" />
+
+                    <h6 class="fw-bold mb-3">Invoice Items</h6>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="small text-muted text-uppercase">
+                                <tr>
+                                    <th style="min-width: 250px;">Product</th>
+                                    <th style="width: 120px;">Qty</th>
+                                    <th>Price HT</th>
+                                    <th>TVA</th>
+                                    <th class="text-end">Total TTC</th>
+                                    <th style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var line in invoice.Lignes)
+                                {
+                                    <tr>
+                                        <td>
+                                            <select class="form-select form-select-sm rounded-3" 
+                                                    value="@line.ProduitId" 
+                                                    @onchange="(e) => OnProductSelected(line, e)">
+                                                <option value="0">-- Select Product --</option>
+                                                @if (products != null)
+                                                {
+                                                    @foreach (var p in products)
+                                                    {
+                                                        <option value="@p.Id">@p.Nom</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm rounded-3" 
+                                                   @bind="line.Quantite" @bind:event="oninput" 
+                                                   @onchange="CalculateTotals" min="1" />
+                                        </td>
+                                        <td><span class="small">@line.PrixUnitaireHT.ToString("N3")</span></td>
+                                        <td><span class="small">@line.TauxTVA%</span></td>
+                                        <td class="text-end fw-bold">@line.MontantTTC.ToString("N3")</td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-link text-danger p-0" @onclick="() => invoice.Lignes.Remove(line)">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-light btn-sm rounded-pill mt-2" @onclick="AddLine">
+                        <i class="bi bi-plus-lg me-1"></i> Add Line Item
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side: Summary & Actions -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-light">
+                    <h6 class="fw-bold mb-4">Summary</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total HT</span>
+                        <span class="fw-medium">@invoice.TotalHT.ToString("N3") TND</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total TVA</span>
+                        <span class="fw-medium">@invoice.TotalTVA.ToString("N3") TND</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Fiscal Stamp</span>
+                        <span class="fw-medium">@invoice.TimbreFiscal.ToString("N3") TND</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fw-bold h5 mb-0">Total TTC</span>
+                        <span class="fw-bold h5 mb-0 text-primary">@invoice.TotalTTC.ToString("N3") TND</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold">
+                            <i class="bi bi-save me-2"></i> Save Invoice
+                        </button>
+                        <button type="button" class="btn btn-light rounded-pill py-2" @onclick='() => Navigation.NavigateTo("/invoices")'>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+
+                @if (invoice.Statut == "Brouillon" && Id != 0)
+                {
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-success-subtle text-success">
+                        <h6 class="fw-bold mb-2">Validation</h6>
+                        <p class="small mb-3">Validating this invoice will lock it and decrement the stock levels of all products.</p>
+                        <button type="button" class="btn btn-success rounded-pill w-100 fw-bold" @onclick="() => ValidateInvoice()">
+                            Confirm & Validate
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+<style>
+    .btn-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .bg-success-subtle { background-color: #dcfce7; }
+</style>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private InvoiceDto invoice = new() { Lignes = new() };
+    private List<ClientDto>? clients;
+    private List<ProduitDto>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        clients = await ClientService.GetAllAsync();
+        products = await ProductService.GetAllAsync();
+
+        if (Id != 0)
+        {
+            var existing = await InvoiceService.GetByIdAsync(Id);
+            if (existing != null) invoice = existing;
+        }
+        else
+        {
+            AddLine();
+            invoice.TimbreFiscal = 1.000m; // Default
+        }
+    }
+
+    private void AddLine()
+    {
+        invoice.Lignes.Add(new InvoiceLineDto { Quantite = 1 });
+    }
+
+    private void OnProductSelected(InvoiceLineDto line, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int prodId))
+        {
+            var prod = products?.FirstOrDefault(p => p.Id == prodId);
+            if (prod != null)
+            {
+                line.ProduitId = prod.Id;
+                line.ProductName = prod.Nom;
+                line.PrixUnitaireHT = prod.PrixUnitaireHT;
+                line.TauxTVA = prod.TauxTVA;
+                CalculateTotals();
+            }
+        }
+    }
+
+    private void CalculateTotals()
+    {
+        invoice.TotalHT = 0;
+        invoice.TotalTVA = 0;
+
+        foreach (var line in invoice.Lignes)
+        {
+            line.MontantHT = line.Quantite * line.PrixUnitaireHT;
+            line.MontantTVA = line.MontantHT * (line.TauxTVA / 100);
+            line.MontantTTC = line.MontantHT + line.MontantTVA;
+
+            invoice.TotalHT += line.MontantHT;
+            invoice.TotalTVA += line.MontantTVA;
+        }
+
+        invoice.TotalTTC = invoice.TotalHT + invoice.TotalTVA + invoice.TimbreFiscal;
+    }
+
+    private async Task SaveInvoice()
+    {
+        if (invoice.ClientId == 0)
+        {
+            ToastService.ShowWarning("Please select a client.");
+            return;
+        }
+
+        if (!invoice.Lignes.Any() || invoice.Lignes.Any(l => l.ProduitId == 0))
+        {
+            ToastService.ShowWarning("Please select products for all lines.");
+            return;
+        }
+
+        bool success = await InvoiceService.CreateAsync(invoice);
+        if (success)
+        {
+            ToastService.ShowSuccess("Invoice saved successfully.");
+            Navigation.NavigateTo("/invoices");
+        }
+        else
+        {
+            ToastService.ShowError("Failed to save invoice.");
+        }
+    }
+
+    private async Task ValidateInvoice()
+    {
+        var success = await InvoiceService.ValidateAsync(Id);
+        if (success)
+        {
+            ToastService.ShowSuccess("Invoice validated.");
+            Navigation.NavigateTo("/invoices");
+        }
+    }
+}

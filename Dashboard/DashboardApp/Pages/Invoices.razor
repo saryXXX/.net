@@ -1,0 +1,141 @@
+@page "/invoices"
+@attribute [Authorize]
+@using DashboardApp.Services
+@using Dashboard.Shared.DTOs
+@inject IInvoiceService InvoiceService
+@inject ToastService ToastService
+@inject NavigationManager Navigation
+
+<PageTitle>Invoices & Billing</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800 fw-bold">Invoices</h1>
+            <p class="text-muted small mb-0">Track and manage your customer billing.</p>
+        </div>
+        <button class="btn btn-primary shadow-sm rounded-pill px-4" @onclick='() => Navigation.NavigateTo("/invoices/new")'>
+            <i class="bi bi-file-earmark-plus me-2"></i> Create New Invoice
+        </button>
+    </div>
+
+    @if (invoices == null)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Invoice No.</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted">Customer</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted">Date</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted text-end">Total TTC</th>
+                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">Status</th>
+                            <th class="pe-4 py-3 text-end text-uppercase small fw-bold text-muted">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inv in invoices)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@inv.Numero</div>
+                                </td>
+                                <td>
+                                    <div class="fw-medium">@inv.ClientName</div>
+                                </td>
+                                <td>@inv.DateFacture.ToShortDateString()</td>
+                                <td class="text-end fw-bold">@inv.TotalTTC.ToString("N3") <small class="text-muted">TND</small></td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill @GetStatusClass(inv.Statut) px-3 py-2">
+                                        @inv.Statut
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <div class="btn-group">
+                                        <button class="btn btn-icon btn-light btn-sm rounded-circle me-1" title="View/Edit" @onclick='() => Navigation.NavigateTo($"/invoices/edit/{inv.Id}")'>
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        @if (inv.Statut == "Brouillon")
+                                        {
+                                            <button class="btn btn-icon btn-light-success btn-sm rounded-circle me-1" title="Validate" @onclick="() => ValidateInvoice(inv.Id)">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                            <button class="btn btn-icon btn-light-danger btn-sm rounded-circle" title="Delete" @onclick="() => ConfirmDelete(inv.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-light-success { background-color: #f8f9fa; color: #198754; }
+    .btn-light-success:hover { background-color: #198754; color: white; }
+    .btn-light-danger { background-color: #f8f9fa; color: #dc3545; }
+    .btn-light-danger:hover { background-color: #dc3545; color: white; }
+    .bg-draft { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
+    .bg-validated { background-color: #e8f5e9; color: #2e7d32; }
+    .bg-paid { background-color: #e3f2fd; color: #1565c0; }
+</style>
+
+@code {
+    private List<InvoiceDto>? invoices;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInvoices();
+    }
+
+    private async Task LoadInvoices()
+    {
+        invoices = await InvoiceService.GetAllAsync();
+    }
+
+    private string GetStatusClass(string status) => status switch {
+        "Brouillon" => "bg-draft",
+        "Validée" => "bg-validated",
+        "Payée" => "bg-paid",
+        _ => "bg-light"
+    };
+
+    private async Task ValidateInvoice(int id)
+    {
+        var success = await InvoiceService.ValidateAsync(id);
+        if (success)
+        {
+            ToastService.ShowSuccess("Invoice validated and stock updated.");
+            await LoadInvoices();
+        }
+        else
+        {
+            ToastService.ShowError("Failed to validate invoice.");
+        }
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        var success = await InvoiceService.DeleteAsync(id);
+        if (success)
+        {
+            ToastService.ShowSuccess("Invoice deleted.");
+            await LoadInvoices();
+        }
+    }
+}
