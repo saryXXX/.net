@@ -35,7 +35,7 @@ builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
 // 2. Configure Identity
-builder.Services.AddIdentityCore<IdentityUser>(options =>
+builder.Services.AddIdentityApiEndpoints<IdentityUser>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
@@ -44,8 +44,7 @@ builder.Services.AddIdentityCore<IdentityUser>(options =>
     options.Password.RequiredLength = 6;
 })
 .AddRoles<IdentityRole>()
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -60,7 +59,8 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-    await DbSeeder.SeedAsync(context);
+    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+    await DbSeeder.SeedAsync(context, userManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -77,5 +77,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapIdentityApi<IdentityUser>();
 
 app.Run();

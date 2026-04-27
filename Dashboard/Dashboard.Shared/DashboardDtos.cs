@@ -1,4 +1,4 @@
-namespace Backend.DTOs
+namespace Dashboard.Shared.DTOs
 {
     public class DashboardStatsDto
     {
