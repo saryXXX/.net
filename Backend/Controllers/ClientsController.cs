@@ -1,5 +1,6 @@
 using Backend.Models;
 using Backend.Services;
+using Dashboard.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,20 @@ namespace Backend.Controllers
         {
             var result = await _clientService.GetAllAsync();
             if (!result.IsSuccess) return BadRequest(result.Error);
-            return Ok(result.Value);
+
+            var dtos = result.Value.Select(c => new ClientDto
+            {
+                Id = c.Id,
+                Nom = c.Nom,
+                Prenom = c.Prenom,
+                Email = c.Email,
+                Telephone = c.Telephone,
+                Adresse = c.Adresse,
+                MatriculeFiscal = c.MatriculeFiscal,
+                DateCreation = c.DateCreation
+            }).ToList();
+
+            return Ok(dtos);
         }
 
         [HttpGet("{id}")]
@@ -30,21 +44,58 @@ namespace Backend.Controllers
         {
             var result = await _clientService.GetByIdAsync(id);
             if (!result.IsSuccess) return NotFound(result.Error);
-            return Ok(result.Value);
+
+            var c = result.Value;
+            var dto = new ClientDto
+            {
+                Id = c.Id,
+                Nom = c.Nom,
+                Prenom = c.Prenom,
+                Email = c.Email,
+                Telephone = c.Telephone,
+                Adresse = c.Adresse,
+                MatriculeFiscal = c.MatriculeFiscal,
+                DateCreation = c.DateCreation
+            };
+
+            return Ok(dto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Client client)
+        public async Task<IActionResult> Create([FromBody] ClientDto dto)
         {
+            var client = new Client
+            {
+                Nom = dto.Nom,
+                Prenom = dto.Prenom,
+                Email = dto.Email,
+                Telephone = dto.Telephone,
+                Adresse = dto.Adresse,
+                MatriculeFiscal = dto.MatriculeFiscal
+            };
+
             var result = await _clientService.CreateAsync(client);
             if (!result.IsSuccess) return BadRequest(result.Error);
             return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Client client)
+        public async Task<IActionResult> Update(int id, [FromBody] ClientDto dto)
         {
-            if (id != client.Id) return BadRequest("Mismatched ID");
+            if (id != dto.Id) return BadRequest("Mismatched ID");
+
+            var client = new Client
+            {
+                Id = dto.Id,
+                Nom = dto.Nom,
+                Prenom = dto.Prenom,
+                Email = dto.Email,
+                Telephone = dto.Telephone,
+                Adresse = dto.Adresse,
+                MatriculeFiscal = dto.MatriculeFiscal,
+                DateCreation = dto.DateCreation
+            };
+
             var result = await _clientService.UpdateAsync(client);
             if (!result.IsSuccess) return BadRequest(result.Error);
             return NoContent();
