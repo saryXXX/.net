@@ -25,6 +25,40 @@ a, .btn-link {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem rgba(36, 152, 99, 0.25);
 }
 
+.btn-brand-green {
+    background-color: #249863 !important;
+    color: white !important;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-brand-green:hover {
+    background-color: #1e7d51 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(36, 152, 99, 0.2);
+}
+
+.btn-outline-brand-green {
+    color: #249863 !important;
+    border: 1px solid #249863 !important;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-brand-green:hover {
+    background-color: #249863 !important;
+    color: white !important;
+}
+
+.text-brand-green {
+    color: #249863 !important;
+}
+
+.bg-brand-green-subtle {
+    background-color: rgba(36, 152, 99, 0.1) !important;
+}
+
 .content {
     padding-top: 1.1rem;
 }
