@@ -1,6 +1,6 @@
 using Backend.Common;
 using Backend.Data;
-using Backend.DTOs;
+using Dashboard.Shared.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services

@@ -1,12 +1,20 @@
 using Backend.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Data
 {
     public static class DbSeeder
     {
-        public static async Task SeedAsync(ApplicationDbContext context)
+        public static async Task SeedAsync(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
+            // 0. Default Admin User
+            if (!await userManager.Users.AnyAsync())
+            {
+                var admin = new IdentityUser { UserName = "admin@sary.tn", Email = "admin@sary.tn", EmailConfirmed = true };
+                await userManager.CreateAsync(admin, "Admin123!");
+            }
+
             // 1. Fiscal Parameters
             if (!await context.ParametresFiscaux.AnyAsync())
             {
