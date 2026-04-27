@@ -29,7 +29,7 @@
     }
     else
     {
-        <!-- Summary Stats -->
+        <!-- Summary Stats Row 1 -->
         <div class="row g-4 mb-4">
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm rounded-4 p-4 card-ca h-100">
@@ -37,9 +37,8 @@
                         <div class="icon-box bg-white text-primary rounded-3 shadow-sm">
                             <i class="bi bi-currency-dollar"></i>
                         </div>
-                        <span class="badge bg-success-subtle text-success rounded-pill">+12.5%</span>
                     </div>
-                    <h6 class="text-uppercase small fw-bold text-muted mb-1">Total Revenue</h6>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Total Revenue (TTC)</h6>
                     <h3 class="fw-bold mb-0">@stats.TotalCA.ToString("N3") <small class="fs-6 fw-normal">TND</small></h3>
                 </div>
             </div>
@@ -47,38 +46,81 @@
                 <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="icon-box bg-light text-success rounded-3">
-                            <i class="bi bi-receipt"></i>
+                            <i class="bi bi-cash-stack"></i>
                         </div>
                     </div>
-                    <h6 class="text-uppercase small fw-bold text-muted mb-1">Invoices</h6>
-                    <h3 class="fw-bold mb-0">@stats.TotalFactures</h3>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Total HT (Excl. VAT)</h6>
+                    <h3 class="fw-bold mb-0 text-brand-green">@fiscalSummary?.TotalHT.ToString("N3") <small class="fs-6 fw-normal">TND</small></h3>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="icon-box bg-light text-warning rounded-3">
-                            <i class="bi bi-box-seam"></i>
+                        <div class="icon-box bg-light text-info rounded-3">
+                            <i class="bi bi-percent"></i>
                         </div>
-                        @if (stats.ProduitsEnAlerte > 0)
-                        {
-                            <span class="badge bg-danger rounded-pill">@stats.ProduitsEnAlerte Alerts</span>
-                        }
                     </div>
-                    <h6 class="text-uppercase small fw-bold text-muted mb-1">Low Stock Items</h6>
-                    <h3 class="fw-bold mb-0">@stats.ProduitsEnAlerte</h3>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Total VAT Collected</h6>
+                    <h3 class="fw-bold mb-0">@fiscalSummary?.TotalTVA.ToString("N3") <small class="fs-6 fw-normal">TND</small></h3>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm rounded-4 p-4 h-100 brand-green-bg text-white">
-
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="icon-box bg-white bg-opacity-25 text-white rounded-3">
                             <i class="bi bi-people"></i>
                         </div>
                     </div>
-                    <h6 class="text-uppercase small fw-bold text-white text-opacity-75 mb-1">Total Clients</h6>
+                    <h6 class="text-uppercase x-small fw-bold text-white text-opacity-75 mb-1">Total Clients</h6>
                     <h3 class="fw-bold mb-0">@totalClients</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Stats Row 2 -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-light text-warning rounded-3">
+                            <i class="bi bi-archive"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Inventory Value</h6>
+                    <h3 class="fw-bold mb-0">@inventorySummary?.TotalInventoryValue.ToString("N3") <small class="fs-6 fw-normal">TND</small></h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-light text-danger rounded-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Stock Alerts</h6>
+                    <h3 class="fw-bold mb-0 @(stats.ProduitsEnAlerte > 0 ? "text-danger" : "")">@stats.ProduitsEnAlerte</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-light text-dark rounded-3">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Total Products</h6>
+                    <h3 class="fw-bold mb-0">@inventorySummary?.TotalProducts</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-light text-primary rounded-3">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase x-small fw-bold text-muted mb-1">Total Invoices</h6>
+                    <h3 class="fw-bold mb-0">@stats.TotalFactures</h3>
                 </div>
             </div>
         </div>
@@ -140,6 +182,31 @@
                 </div>
             </div>
 
+            <!-- Financial Split (HT vs TVA) -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4">
+                        <h5 class="fw-bold mb-0">Financial Split</h5>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        @if (fiscalSummary != null)
+                        {
+                            <ApexChart TItem="ChartDataDto">
+                                <ApexPointSeries TItem="ChartDataDto" 
+                                                Items='new List<ChartDataDto> { 
+                                                    new() { Label = "HT", Value = fiscalSummary.TotalHT },
+                                                    new() { Label = "TVA", Value = fiscalSummary.TotalTVA }
+                                                }' 
+                                                Name="Amount" 
+                                                SeriesType="SeriesType.Donut" 
+                                                XValue="@(e => e.Label)" 
+                                                YValue="@(e => e.Value)" />
+                            </ApexChart>
+                        }
+                    </div>
+                </div>
+            </div>
+
             <!-- VAT Distribution -->
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
@@ -157,10 +224,6 @@
                                                 XValue="@(e => $"{e.Rate}%")" 
                                                 YValue="@(e => e.TotalTva)" />
                             </ApexChart>
-                        }
-                        else
-                        {
-                            <p class="text-muted small">No tax data available</p>
                         }
                     </div>
                 </div>
