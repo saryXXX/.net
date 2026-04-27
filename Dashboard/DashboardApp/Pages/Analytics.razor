@@ -193,10 +193,10 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error fetching data: {ex.Message}");
-            // Initialize with defaults to prevent UI crash
-            stats = new DashboardStatsDto();
-            fiscalSummary = new FiscalSummaryDto();
-            inventorySummary = new InventorySummaryDto();
+            // Initialize with defaults to remove Loading state
+            stats = new DashboardStatsDto() { TurnoverHistory = new(), TopProducts = new() };
+            fiscalSummary = new FiscalSummaryDto() { TvaDetails = new() };
+            inventorySummary = new InventorySummaryDto() { StatusBreakdown = new() };
         }
     }
 }

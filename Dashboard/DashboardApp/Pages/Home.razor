@@ -189,7 +189,8 @@
         }
         catch (Exception)
         {
-            stats = new DashboardStatsDto();
+            // Initialize with defaults to remove Loading state
+            stats = new DashboardStatsDto() { TurnoverHistory = new(), TopProducts = new() };
         }
     }
 }
