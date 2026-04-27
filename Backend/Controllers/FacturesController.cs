@@ -153,6 +153,14 @@ namespace Backend.Controllers
             return Ok();
         }
 
+        [HttpPut("{id}/pay")]
+        public async Task<IActionResult> MarkAsPaid(int id)
+        {
+            var result = await _factureService.MarkAsPaidAsync(id);
+            if (!result.IsSuccess) return BadRequest(result.Error);
+            return Ok();
+        }
+
         [HttpPut("{id}/validate")]
         public async Task<IActionResult> Validate(int id)
         {

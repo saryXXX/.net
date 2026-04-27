@@ -11,6 +11,7 @@ namespace Backend.Services
         Task<Result<Facture>> GetByIdAsync(int id);
         Task<Result<Facture>> CreateFactureAsync(Facture facture);
         Task<Result> ValidateFactureAsync(int id);
+        Task<Result> MarkAsPaidAsync(int id);
         Task<Result> SoftDeleteAsync(int id);
     }
 
@@ -120,6 +121,16 @@ namespace Backend.Services
                 }
             }
             
+            await _context.SaveChangesAsync();
+            return Result.Success();
+        }
+
+        public async Task<Result> MarkAsPaidAsync(int id)
+        {
+            var facture = await _context.Factures.FindAsync(id);
+            if (facture == null) return Result.Failure("Invoice not found.");
+            
+            facture.Statut = "Payée";
             await _context.SaveChangesAsync();
             return Result.Success();
         }

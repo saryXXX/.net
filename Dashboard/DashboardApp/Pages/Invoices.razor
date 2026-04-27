@@ -67,6 +67,12 @@
                                         <button class="btn btn-icon btn-primary btn-sm rounded-circle me-1" title="Print/Preview" @onclick='() => Navigation.NavigateTo($"/invoices/print/{inv.Id}")'>
                                             <i class="bi bi-printer"></i>
                                         </button>
+                                        @if (inv.Statut == "Validée")
+                                        {
+                                            <button class="btn btn-icon btn-light-info btn-sm rounded-circle me-1" title="Mark as Paid" @onclick="() => MarkAsPaid(inv.Id)">
+                                                <i class="bi bi-cash-stack"></i>
+                                            </button>
+                                        }
                                         @if (inv.Statut == "Brouillon")
                                         {
                                             <button class="btn btn-icon btn-light-success btn-sm rounded-circle me-1" title="Validate" @onclick="() => ValidateInvoice(inv.Id)">
@@ -93,6 +99,8 @@
     .btn-light-success:hover { background-color: #198754; color: white; }
     .btn-light-danger { background-color: #f8f9fa; color: #dc3545; }
     .btn-light-danger:hover { background-color: #dc3545; color: white; }
+    .btn-light-info { background-color: #f8f9fa; color: #0dcaf0; }
+    .btn-light-info:hover { background-color: #0dcaf0; color: white; }
     .bg-draft { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .bg-validated { background-color: #e8f5e9; color: #2e7d32; }
     .bg-paid { background-color: #e3f2fd; color: #1565c0; }
@@ -129,6 +137,20 @@
         else
         {
             ToastService.ShowError("Failed to validate invoice.");
+        }
+    }
+
+    private async Task MarkAsPaid(int id)
+    {
+        var success = await InvoiceService.MarkAsPaidAsync(id);
+        if (success)
+        {
+            ToastService.ShowSuccess("Invoice marked as Paid.");
+            await LoadInvoices();
+        }
+        else
+        {
+            ToastService.ShowError("Failed to update status.");
         }
     }
 
