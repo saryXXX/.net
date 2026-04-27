@@ -1,4 +1,5 @@
 @page "/analytics"
+@attribute [Authorize]
 @inject HttpClient Http
 
 <PageTitle>Analytics Dashboard</PageTitle>
@@ -79,9 +80,10 @@
                     </div>
                     <div class="card-body">
                         <ApexChart TItem="ChartDataDto" Title="Monthly Turnover" XAxisType="XAxisType.Category">
-                            <ApexAreaSeries TItem="ChartDataDto" 
+                            <ApexPointSeries TItem="ChartDataDto" 
                                            Items="stats.TurnoverHistory" 
                                            Name="Revenue" 
+                                           SeriesType="SeriesType.Area"
                                            XValue="@(e => e.Label)" 
                                            YValue="@(e => e.Value)" 
                                            Color="#007bff" />
