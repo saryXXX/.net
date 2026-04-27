@@ -1,4 +1,7 @@
 <div class="top-row ps-3 navbar navbar-dark">
+    @inject IAuthService AuthService
+    @inject NavigationManager NavigationManager
+
     <div class="container-fluid py-2">
         <a class="navbar-brand d-flex align-items-center justify-content-center w-100" href="">
             <img src="logo-darkmode.png" alt="Factun Logo" style="height: 50px; width: auto;" />
@@ -52,6 +55,16 @@
                 <span class="nav-text">Analytics</span>
             </NavLink>
         </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3 mt-4 mb-2">
+                    <button class="nav-link rounded-pill border-0 bg-transparent w-100 text-start text-danger logout-btn" @onclick="Logout">
+                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
+                        <span class="nav-text">Logout</span>
+                    </button>
+                </div>
+            </Authorized>
+        </AuthorizeView>
     </nav>
 </div>
 
@@ -90,7 +103,18 @@
     .nav-text {
         font-weight: 500;
     }
+
+    .logout-btn {
+        margin-top: 2rem;
+        border: 1px solid rgba(220, 53, 69, 0.2) !important;
+    }
+
+    .logout-btn:hover {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+        color: #dc3545 !important;
+    }
 </style>
+
 
 @code {
     private bool collapseNavMenu = true;
@@ -100,5 +124,11 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.Logout();
+        NavigationManager.NavigateTo("login");
     }
 }

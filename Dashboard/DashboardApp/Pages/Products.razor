@@ -3,6 +3,8 @@
 @using DashboardApp.Services
 @using Dashboard.Shared.DTOs
 @inject IProductService ProductService
+@inject ToastService ToastService
+
 
 <PageTitle>Products Management</PageTitle>
 
@@ -12,9 +14,10 @@
             <h1 class="h3 mb-0 text-gray-800 fw-bold">Inventory & Products</h1>
             <p class="text-muted small mb-0">Manage your product catalog and stock levels.</p>
         </div>
-        <button class="btn btn-primary shadow-sm rounded-pill px-4" @onclick="ShowAddModal">
+        <button class="btn btn-brand-green shadow-sm rounded-pill px-4 fw-bold" @onclick="ShowAddModal">
             <i class="bi bi-plus-lg me-2"></i> Add New Product
         </button>
+
     </div>
 
     @if (products == null)
@@ -30,25 +33,27 @@
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead class="brand-thead text-white">
                         <tr>
-                            <th class="ps-4 py-3 text-uppercase small fw-bold text-muted">Product Name</th>
-                            <th class="py-3 text-uppercase small fw-bold text-muted text-end">Price (HT)</th>
-                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">VAT</th>
-                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">Stock</th>
-                            <th class="py-3 text-uppercase small fw-bold text-muted text-center">Status</th>
-                            <th class="pe-4 py-3 text-end text-uppercase small fw-bold text-muted">Actions</th>
+                            <th class="ps-4 py-3 text-uppercase x-small fw-bold letter-spacing-1">Product Name</th>
+                            <th class="py-3 text-uppercase x-small fw-bold letter-spacing-1 text-end">Price (HT)</th>
+                            <th class="py-3 text-uppercase x-small fw-bold letter-spacing-1 text-center">VAT</th>
+                            <th class="py-3 text-uppercase x-small fw-bold letter-spacing-1 text-center">Stock</th>
+                            <th class="py-3 text-uppercase x-small fw-bold letter-spacing-1 text-center">Status</th>
+                            <th class="pe-4 py-3 text-end text-uppercase x-small fw-bold letter-spacing-1">Actions</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach (var prod in products)
                         {
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        <div class="product-icon-container me-3">
-                                            <i class="bi bi-box-fill text-primary"></i>
+                                        <div class="product-icon-container me-3 shadow-sm">
+                                            <i class="bi bi-box-fill brand-green-text"></i>
                                         </div>
+
                                         <div>
                                             <div class="fw-bold text-dark">@prod.Nom</div>
                                             <div class="text-muted x-small">ID: #@prod.Id.ToString("D4")</div>
@@ -153,17 +158,52 @@
     </div>
 }
 
+@if (showDeleteConfirm)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4 p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-octagon text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="fw-bold">Remove Product?</h4>
+                <p class="text-muted">Are you sure you want to remove <strong>@productToDelete?.Nom</strong> from the catalog? This cannot be undone.</p>
+                <div class="mt-4 d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-4 flex-grow-1" @onclick="() => showDeleteConfirm = false">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 flex-grow-1 fw-bold" @onclick="ExecuteDelete">Delete Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
 <style>
     .product-icon-container {
         width: 42px;
         height: 42px;
-        background: #f8fbff;
-        border: 1px solid #eef4ff;
-        border-radius: 12px;
+        background: #111111;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
+        font-size: 1.1rem;
+    }
+    .brand-green-text { color: #249863; }
+    .btn-brand-green {
+        background-color: #249863;
+        color: white;
+        border: none;
+        transition: all 0.2s;
+    }
+    .btn-brand-green:hover {
+        background-color: #1e7e52;
+        color: white;
+        transform: translateY(-2px);
+    }
+    .brand-thead {
+        background: #111111;
+        border-bottom: 3px solid #249863;
     }
     .btn-white {
         background: white;
@@ -171,17 +211,23 @@
     }
     .btn-white:hover {
         background: #f9f9f9;
+        color: #249863;
     }
-    .x-small { font-size: 0.75rem; }
-    .bg-danger-subtle { background-color: #fee2e2; }
-    .bg-warning-subtle { background-color: #fef3c7; }
-    .bg-success-subtle { background-color: #dcfce7; }
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .x-small { font-size: 0.7rem; }
+    .bg-danger-subtle { background-color: #fee2e2; color: #dc2626; }
+    .bg-warning-subtle { background-color: #fef3c7; color: #d97706; }
+    .bg-success-subtle { background-color: #dcfce7; color: #16a34a; }
 </style>
+
 
 @code {
     private List<ProduitDto>? products;
     private bool showModal = false;
+    private bool showDeleteConfirm = false;
     private ProduitDto currentProduct = new();
+    private ProduitDto? productToDelete;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -225,17 +271,40 @@
 
         if (success)
         {
+            ToastService.ShowSuccess($"Product successfully {(currentProduct.Id == 0 ? "created" : "updated")}.");
             showModal = false;
             await LoadProducts();
         }
+        else
+        {
+            ToastService.ShowError("Failed to save product.");
+        }
     }
 
-    private async Task ConfirmDelete(ProduitDto prod)
+    private void ConfirmDelete(ProduitDto prod)
     {
-        // Simple confirmation for now
-        var success = await ProductService.DeleteAsync(prod.Id);
-        if (success) await LoadProducts();
+        productToDelete = prod;
+        showDeleteConfirm = true;
     }
+
+    private async Task ExecuteDelete()
+    {
+        if (productToDelete == null) return;
+        
+        var success = await ProductService.DeleteAsync(productToDelete.Id);
+        showDeleteConfirm = false;
+        
+        if (success)
+        {
+            ToastService.ShowSuccess("Product deleted successfully.");
+            await LoadProducts();
+        }
+        else
+        {
+            ToastService.ShowError("Failed to delete product.");
+        }
+    }
+
 
     private void CloseModal() => showModal = false;
 }
