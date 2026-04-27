@@ -33,42 +33,65 @@
             @foreach (var client in clients)
             {
                 <div class="col">
-                    <div class="card border-0 shadow-sm rounded-4 h-100 client-card overflow-hidden">
-                        <div class="card-header bg-primary py-3 border-0 d-flex justify-content-between align-items-center">
-                            <div class="avatar-sm bg-white text-primary rounded-circle fw-bold">
-                                @client.Nom[0]@client.Prenom[0]
+                    <div class="card border-0 shadow-sm rounded-4 h-100 id-card overflow-hidden">
+                        <div class="card-body p-0">
+                            <div class="id-card-header d-flex justify-content-between align-items-center p-3 text-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-box me-3 shadow-sm">
+                                        <span class="fw-bold">
+                                            @((!string.IsNullOrEmpty(client.Nom) ? client.Nom[0].ToString() : "") + 
+                                              (!string.IsNullOrEmpty(client.Prenom) ? client.Prenom[0].ToString() : ""))
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-uppercase letter-spacing-1">Factun Partner</h6>
+                                        <span class="x-small opacity-75">ID: #@client.Id.ToString("D4")</span>
+                                    </div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-white p-0 opacity-75 hover-opacity-100" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-2">
+                                        <li><button class="dropdown-item py-2" @onclick="() => ShowEditModal(client)"><i class="bi bi-pencil-square me-2 text-primary"></i> Edit Client</button></li>
+                                        <li><button class="dropdown-item py-2 text-danger" @onclick="() => ConfirmDelete(client)"><i class="bi bi-person-x me-2"></i> Dismiss Client</button></li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-link text-white p-0" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
-                                    <li><button class="dropdown-item py-2" @onclick="() => ShowEditModal(client)"><i class="bi bi-pencil me-2"></i> Edit</button></li>
-                                    <li><button class="dropdown-item py-2 text-danger" @onclick="() => ConfirmDelete(client)"><i class="bi bi-trash me-2"></i> Delete</button></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="card-body p-4 pt-3">
-                            <h5 class="fw-bold mb-1">@client.Prenom @client.Nom</h5>
-                            <div class="badge bg-light text-primary border mb-3">#@client.MatriculeFiscal</div>
                             
-                            <div class="d-flex flex-column gap-2 small text-muted">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-envelope me-2"></i> @(string.IsNullOrEmpty(client.Email) ? "No email" : client.Email)
+                            <div class="p-4">
+                                <div class="mb-3">
+                                    <label class="id-label">Full Name</label>
+                                    <div class="id-value fw-bold fs-5">@client.Prenom @client.Nom</div>
                                 </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-telephone me-2"></i> @(string.IsNullOrEmpty(client.Telephone) ? "No phone" : client.Telephone)
+                                
+                                <div class="mb-3">
+                                    <label class="id-label">Tax ID (MF)</label>
+                                    <div class="id-value font-monospace">@client.MatriculeFiscal</div>
                                 </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-geo-alt me-2 text-truncate"></i> @(string.IsNullOrEmpty(client.Adresse) ? "No address" : client.Adresse)
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="id-label">Phone</label>
+                                        <div class="id-value small text-truncate">@client.Telephone</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="id-label">Email</label>
+                                        <div class="id-value small text-truncate">@client.Email</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label class="id-label">Registered Office</label>
+                                    <div class="id-value small text-truncate">@client.Adresse</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-light border-0 py-3 px-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="x-small text-muted">Created: @client.DateCreation.ToShortDateString()</span>
-                                <button class="btn btn-sm btn-link text-decoration-none fw-bold p-0" @onclick="() => ShowHistory(client)">View History</button>
-                            </div>
+                        <div class="card-footer bg-light border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                            <span class="x-small text-muted">Valid Since: @client.DateCreation.ToShortDateString()</span>
+                            <button class="btn btn-sm btn-green-outline rounded-pill px-3 fw-bold" @onclick="() => ShowHistory(client)">
+                                <i class="bi bi-clock-history me-1"></i> History
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -187,10 +210,54 @@
 }
 
 <style>
-    .avatar-sm { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
-    .client-card { transition: transform 0.2s; }
-    .client-card:hover { transform: translateY(-5px); }
+    .id-card { 
+        transition: transform 0.2s, box-shadow 0.2s; 
+        border-radius: 20px !important;
+        background: #ffffff;
+    }
+    .id-card:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+    }
+    .id-card-header {
+        background: #111111;
+        border-bottom: 3px solid #249863;
+    }
+    .avatar-box {
+        width: 48px;
+        height: 48px;
+        background: #249863;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    .id-label {
+        font-size: 0.65rem;
+        text-uppercase;
+        font-weight: 700;
+        color: #999;
+        margin-bottom: 2px;
+        display: block;
+        letter-spacing: 0.5px;
+    }
+    .id-value {
+        color: #333;
+    }
+    .letter-spacing-1 { letter-spacing: 1px; }
     .x-small { font-size: 0.75rem; }
+    .btn-green-outline {
+        color: #249863;
+        border: 1px solid rgba(36, 152, 99, 0.3);
+        background: rgba(36, 152, 99, 0.05);
+        transition: all 0.2s;
+    }
+    .btn-green-outline:hover {
+        background: #249863;
+        color: white;
+    }
 </style>
 
 @code {
