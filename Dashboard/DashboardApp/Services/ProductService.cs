@@ -23,12 +23,20 @@ namespace DashboardApp.Services
 
         public async Task<List<ProduitDto>> GetAllAsync()
         {
-            return await _http.GetFromJsonAsync<List<ProduitDto>>("api/produits") ?? new();
+            try
+            {
+                return await _http.GetFromJsonAsync<List<ProduitDto>>("api/produits") ?? new();
+            }
+            catch { return new(); }
         }
 
         public async Task<ProduitDto?> GetByIdAsync(int id)
         {
-            return await _http.GetFromJsonAsync<ProduitDto>($"api/produits/{id}");
+            try
+            {
+                return await _http.GetFromJsonAsync<ProduitDto>($"api/produits/{id}");
+            }
+            catch { return null; }
         }
 
         public async Task<bool> CreateAsync(ProduitDto produit)
