@@ -10,6 +10,7 @@ namespace DashboardApp.Services
         Task<bool> CreateAsync(InvoiceDto invoice);
         Task<bool> UpdateAsync(InvoiceDto invoice);
         Task<bool> ValidateAsync(int id);
+        Task<bool> MarkAsPaidAsync(int id);
         Task<bool> DeleteAsync(int id);
     }
 
@@ -55,6 +56,12 @@ namespace DashboardApp.Services
         public async Task<bool> ValidateAsync(int id)
         {
             var response = await _http.PutAsync($"api/factures/{id}/validate", null);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> MarkAsPaidAsync(int id)
+        {
+            var response = await _http.PutAsync($"api/factures/{id}/pay", null);
             return response.IsSuccessStatusCode;
         }
 
