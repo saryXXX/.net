@@ -4,7 +4,7 @@
 @using Dashboard.Shared.DTOs
 @inject IProductService ProductService
 
-<PageTitle>Stock Intelligence</PageTitle>
+<PageTitle>Factun | Stock</PageTitle>
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -20,6 +20,9 @@
                     <div class="x-small text-muted">Alerts</div>
                 </div>
             </div>
+            <button class="btn btn-outline-brand-green rounded-pill px-4 d-flex align-items-center" @onclick="ExportToCsv">
+                <i class="bi bi-download me-2"></i> Export CSV
+            </button>
         </div>
     </div>
 
@@ -84,15 +87,24 @@
                 <div class="d-flex gap-2">
                     <div class="input-group input-group-sm filter-bar shadow-sm rounded-pill overflow-hidden bg-white border" style="width: 250px;">
                         <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" class="form-control border-0 bg-transparent" placeholder="Search product..." @bind="searchTerm" @bind:event="oninput" />
+                        <input type="text" class="form-control border-0 bg-transparent" placeholder="Search product..." @bind="searchTerm" @bind:event="oninput" @onkeyup="ResetPagination" />
                     </div>
-                    <select class="form-select form-select-sm shadow-sm rounded-pill border-0 px-3 bg-light" style="width: 150px;" @bind="statusFilter">
+                    <select class="form-select form-select-sm shadow-sm rounded-pill border-0 px-3 bg-light" style="width: 150px;" @onchange="OnStatusChanged">
                         <option value="All">All Health</option>
                         <option value="Healthy">Healthy</option>
                         <option value="Low">Low Stock</option>
                         <option value="Out">Out of Stock</option>
                     </select>
+                    <div class="d-flex align-items-center ms-2">
+                        <span class="text-muted x-small me-2 text-uppercase fw-bold">Size:</span>
+                        <select class="form-select form-select-sm shadow-sm rounded-pill border-0 px-3 bg-light" style="width: 70px;" @onchange="OnPageSizeChanged">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
                 </div>
+
             </div>
             <div class="card-body p-0">
 
@@ -108,8 +120,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var prod in FilteredProducts)
+                            @foreach (var prod in PagedProducts)
                             {
+
 
                                 <tr>
                                     <td class="ps-4">
@@ -136,7 +149,40 @@
                     </table>
                 </div>
             </div>
+
+            @if (TotalPages > 1)
+            {
+                <div class="card-footer bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center border-top">
+                    <div class="text-muted x-small text-uppercase fw-bold">
+                        Showing @(Math.Min((currentPage - 1) * pageSize + 1, FilteredProducts.Count())) - @(Math.Min(currentPage * pageSize, FilteredProducts.Count())) of @FilteredProducts.Count()
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <button class="page-link rounded-pill px-3 me-2 border-0 shadow-sm" @onclick="() => currentPage--">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                            </li>
+                            @for (int i = 1; i <= TotalPages; i++)
+                            {
+                                var pageNumber = i;
+                                <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                                    <button class="page-link rounded-circle mx-1 border-0 shadow-sm" 
+                                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" 
+                                            @onclick="() => currentPage = pageNumber">@pageNumber</button>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
+                                <button class="page-link rounded-pill px-3 ms-2 border-0 shadow-sm" @onclick="() => currentPage++">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
         </div>
+
     }
 </div>
 
@@ -174,15 +220,32 @@
         border-color: #249863 !important;
         box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1) !important;
     }
+    .page-link {
+        color: #111;
+        background: white;
+    }
+    .page-item.active .page-link {
+        background-color: #249863 !important;
+        color: white !important;
+    }
+    .page-item.disabled .page-link {
+        background-color: #f8f9fa;
+        color: #ccc;
+    }
 </style>
 
 
+
+@inject IJSRuntime JSRuntime
 @inject ToastService ToastService
 
 @code {
     private List<ProduitDto>? products;
     private string searchTerm = "";
     private string statusFilter = "All";
+    private int currentPage = 1;
+    private int pageSize = 10;
+
     private IEnumerable<ProduitDto> FilteredProducts => 
         products?.Where(p => 
             (string.IsNullOrWhiteSpace(searchTerm) || (p.Nom?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) &&
@@ -192,7 +255,43 @@
              (statusFilter == "Out" && p.StockActuel <= 0)))
         ?? Enumerable.Empty<ProduitDto>();
 
+    private IEnumerable<ProduitDto> PagedProducts => 
+        FilteredProducts.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private int TotalPages => (int)Math.Ceiling((double)FilteredProducts.Count() / pageSize);
+
+    private void ResetPagination() => currentPage = 1;
+
+    private void OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            pageSize = newSize;
+            currentPage = 1;
+        }
+    }
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? "All";
+        currentPage = 1;
+    }
+
+    private async Task ExportToCsv()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Produit;Stock Actuel;Seuil Alerte;Prix HT");
+        foreach (var prod in FilteredProducts)
+        {
+            csv.AppendLine($"{prod.Nom};{prod.StockActuel};{prod.SeuilAlerte};{prod.PrixUnitaireHT}");
+        }
+        await JSRuntime.InvokeVoidAsync("downloadFile", $"stock_{DateTime.Now:yyyyMMdd}.csv", csv.ToString());
+        ToastService.ShowSuccess("Stock report exported successfully");
+    }
+
     private bool showAdjustModal = false;
+
+
 
     private ProduitDto? selectedProduct;
     private int newStock;

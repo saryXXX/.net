@@ -4,9 +4,10 @@
 @using Dashboard.Shared.DTOs
 @inject IInvoiceService InvoiceService
 @inject ToastService ToastService
+@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 
-<PageTitle>Invoices & Billing</PageTitle>
+<PageTitle>Factun | Invoices</PageTitle>
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -14,28 +15,42 @@
             <h1 class="h3 mb-0 text-gray-800 fw-bold">Invoices</h1>
             <p class="text-muted small mb-0">Track and manage your customer billing.</p>
         </div>
-        <button class="btn btn-primary shadow-sm rounded-pill px-4" @onclick='() => Navigation.NavigateTo("/invoices/new")'>
-            <i class="bi bi-file-earmark-plus me-2"></i> Create New Invoice
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-brand-green rounded-pill px-4 d-flex align-items-center" @onclick="ExportToCsv">
+                <i class="bi bi-download me-2"></i> Export CSV
+            </button>
+            <button class="btn btn-brand-green shadow-sm rounded-pill px-4 text-white d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/invoices/new")'>
+                <i class="bi bi-file-earmark-plus me-2"></i> Create New Invoice
+            </button>
+        </div>
     </div>
 
 
-    <div class="row mb-4 g-3">
+    <div class="row mb-4 g-3 align-items-center">
         <div class="col-md-6 col-lg-4">
             <div class="input-group filter-bar shadow-sm rounded-pill overflow-hidden bg-white border">
                 <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search by number or client..." @bind="searchTerm" @bind:event="oninput" />
+                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search by number or client..." @bind="searchTerm" @bind:event="oninput" @onkeyup="ResetPagination" />
             </div>
         </div>
         <div class="col-md-6 col-lg-3">
-            <select class="form-select shadow-sm rounded-pill border-0 px-4 bg-white" @bind="statusFilter">
+            <select class="form-select shadow-sm rounded-pill border-0 px-4 bg-white" @onchange="OnStatusChanged">
                 <option value="All">All Statuses</option>
                 <option value="Brouillon">Draft (Brouillon)</option>
                 <option value="Validée">Validated (Validée)</option>
                 <option value="Payée">Paid (Payée)</option>
             </select>
         </div>
+        <div class="col-lg-5 d-flex justify-content-end align-items-center">
+            <span class="text-muted x-small me-2 text-uppercase fw-bold">Per Page:</span>
+            <select class="form-select form-select-sm shadow-sm rounded-pill border-0 px-3 bg-white" style="width: 80px;" @onchange="OnPageSizeChanged">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
     </div>
+
 
 
     @if (invoices == null)
@@ -62,8 +77,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var inv in FilteredInvoices)
+                        @foreach (var inv in PagedInvoices)
                         {
+
 
                             <tr>
                                 <td class="ps-4">
@@ -109,7 +125,40 @@
                     </tbody>
                 </table>
             </div>
+
+            @if (TotalPages > 1)
+            {
+                <div class="card-footer bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div class="text-muted x-small text-uppercase fw-bold">
+                        Showing @(Math.Min((currentPage - 1) * pageSize + 1, FilteredInvoices.Count())) - @(Math.Min(currentPage * pageSize, FilteredInvoices.Count())) of @FilteredInvoices.Count()
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <button class="page-link rounded-pill px-3 me-2 border-0 shadow-sm" @onclick="() => currentPage--">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                            </li>
+                            @for (int i = 1; i <= TotalPages; i++)
+                            {
+                                var pageNumber = i;
+                                <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                                    <button class="page-link rounded-circle mx-1 border-0 shadow-sm" 
+                                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" 
+                                            @onclick="() => currentPage = pageNumber">@pageNumber</button>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
+                                <button class="page-link rounded-pill px-3 ms-2 border-0 shadow-sm" @onclick="() => currentPage++">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
         </div>
+
     }
 </div>
 
@@ -129,12 +178,24 @@
         transition: all 0.2s;
     }
     .filter-bar:focus-within {
-        border-color: #0d6efd !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+        border-color: #249863 !important;
+        box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1) !important;
     }
     .form-select:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+        border-color: #249863;
+        box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1);
+    }
+    .page-link {
+        color: #111;
+        background: white;
+    }
+    .page-item.active .page-link {
+        background-color: #249863 !important;
+        color: white !important;
+    }
+    .page-item.disabled .page-link {
+        background-color: #f8f9fa;
+        color: #ccc;
     }
 </style>
 
@@ -143,6 +204,9 @@
     private List<InvoiceDto>? invoices;
     private string searchTerm = "";
     private string statusFilter = "All";
+    private int currentPage = 1;
+    private int pageSize = 10;
+
     private IEnumerable<InvoiceDto> FilteredInvoices => 
         invoices?.Where(i => 
             (string.IsNullOrWhiteSpace(searchTerm) || 
@@ -150,6 +214,41 @@
              (i.ClientName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) &&
             (statusFilter == "All" || i.Statut == statusFilter))
         ?? Enumerable.Empty<InvoiceDto>();
+
+    private IEnumerable<InvoiceDto> PagedInvoices => 
+        FilteredInvoices.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private int TotalPages => (int)Math.Ceiling((double)FilteredInvoices.Count() / pageSize);
+
+    private void ResetPagination() => currentPage = 1;
+
+    private void OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            pageSize = newSize;
+            currentPage = 1;
+        }
+    }
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? "All";
+        currentPage = 1;
+    }
+
+    private async Task ExportToCsv()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Numero;Date;Client;Total TTC;Statut");
+        foreach (var inv in FilteredInvoices)
+        {
+            csv.AppendLine($"{inv.Numero};{inv.DateFacture:yyyy-MM-dd};{inv.ClientName};{inv.TotalTTC};{inv.Statut}");
+        }
+        await JSRuntime.InvokeVoidAsync("downloadFile", $"invoices_{DateTime.Now:yyyyMMdd}.csv", csv.ToString());
+        ToastService.ShowSuccess("Invoices exported successfully");
+    }
+
 
 
     protected override async Task OnInitializedAsync()

@@ -5,8 +5,9 @@
 @inject IClientService ClientService
 @inject IInvoiceService InvoiceService
 @inject ToastService ToastService
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Customer Management</PageTitle>
+<PageTitle>Factun | Clients</PageTitle>
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -14,19 +15,33 @@
             <h1 class="h3 mb-0 text-gray-800 fw-bold">Customers</h1>
             <p class="text-muted small mb-0">Manage your business relationships and contact details.</p>
         </div>
-        <button class="btn btn-primary shadow-sm rounded-pill px-4" @onclick="ShowAddModal">
-            <i class="bi bi-person-plus-fill me-2"></i> Add New Client
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-brand-green rounded-pill px-4 d-flex align-items-center" @onclick="ExportToCsv">
+                <i class="bi bi-download me-2"></i> Export CSV
+            </button>
+            <button class="btn btn-brand-green text-white shadow-sm rounded-pill px-4 d-flex align-items-center" @onclick="ShowAddModal">
+                <i class="bi bi-person-plus-fill me-2"></i> Add New Client
+            </button>
+        </div>
     </div>
 
-    <div class="row mb-4">
+    <div class="row mb-4 align-items-center">
         <div class="col-md-6">
             <div class="input-group filter-bar shadow-sm rounded-pill overflow-hidden bg-white border">
                 <span class="input-group-text bg-transparent border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search by name, email or Tax ID..." @bind="searchTerm" @bind:event="oninput" />
+                <input type="text" class="form-control border-0 bg-transparent" placeholder="Search by name, email or Tax ID..." @bind="searchTerm" @bind:event="oninput" @onkeyup="ResetPagination" />
             </div>
         </div>
+        <div class="col-md-6 d-flex justify-content-end align-items-center">
+            <span class="text-muted x-small me-2 text-uppercase fw-bold">Per Page:</span>
+            <select class="form-select form-select-sm shadow-sm rounded-pill border-0 px-3 bg-white" style="width: 80px;" @onchange="OnPageSizeChanged">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
     </div>
+
 
 
     @if (clients == null)
@@ -40,8 +55,9 @@
     else
     {
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-            @foreach (var client in FilteredClients)
+            @foreach (var client in PagedClients)
             {
+
 
                 <div class="col">
                     <div class="card border-0 shadow-sm rounded-4 h-100 id-card overflow-hidden">
@@ -108,8 +124,41 @@
                 </div>
             }
         </div>
+
+        @if (TotalPages > 1)
+        {
+            <div class="d-flex justify-content-between align-items-center mt-5 mb-4 px-2">
+                <div class="text-muted x-small text-uppercase fw-bold">
+                    Showing @(Math.Min((currentPage - 1) * pageSize + 1, FilteredClients.Count())) - @(Math.Min(currentPage * pageSize, FilteredClients.Count())) of @FilteredClients.Count()
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <button class="page-link rounded-pill px-3 me-2 border-0 shadow-sm" @onclick="() => currentPage--">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                        </li>
+                        @for (int i = 1; i <= TotalPages; i++)
+                        {
+                            var pageNumber = i;
+                            <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                                <button class="page-link rounded-circle mx-1 border-0 shadow-sm" 
+                                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" 
+                                        @onclick="() => currentPage = pageNumber">@pageNumber</button>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
+                            <button class="page-link rounded-pill px-3 ms-2 border-0 shadow-sm" @onclick="() => currentPage++">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
     }
 </div>
+
 
 @if (showHistoryModal)
 {
@@ -297,12 +346,28 @@
         border-color: #249863 !important;
         box-shadow: 0 0 0 0.25rem rgba(36, 152, 99, 0.1) !important;
     }
+    .page-link {
+        color: #111;
+        background: white;
+    }
+    .page-item.active .page-link {
+        background-color: #249863 !important;
+        color: white !important;
+    }
+    .page-item.disabled .page-link {
+        background-color: #f8f9fa;
+        color: #ccc;
+    }
 </style>
+
 
 
 @code {
     private List<ClientDto>? clients;
     private string searchTerm = "";
+    private int currentPage = 1;
+    private int pageSize = 10;
+
     private IEnumerable<ClientDto> FilteredClients => 
         clients?.Where(c => string.IsNullOrWhiteSpace(searchTerm) || 
             (c.Nom?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
@@ -311,7 +376,37 @@
             (c.MatriculeFiscal?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) 
         ?? Enumerable.Empty<ClientDto>();
 
+    private IEnumerable<ClientDto> PagedClients => 
+        FilteredClients.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private int TotalPages => (int)Math.Ceiling((double)FilteredClients.Count() / pageSize);
+
+    private void ResetPagination() => currentPage = 1;
+
+    private void OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            pageSize = newSize;
+            currentPage = 1;
+        }
+    }
+
+    private async Task ExportToCsv()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Nom;Prenom;Email;Matricule Fiscal;Telephone;Adresse");
+        foreach (var client in FilteredClients)
+        {
+            csv.AppendLine($"{client.Nom};{client.Prenom};{client.Email};{client.MatriculeFiscal};{client.Telephone};{client.Adresse}");
+        }
+        await JSRuntime.InvokeVoidAsync("downloadFile", $"clients_{DateTime.Now:yyyyMMdd}.csv", csv.ToString());
+        ToastService.ShowSuccess("Clients exported successfully");
+    }
+
     private bool showModal = false;
+
+
 
     private bool showHistoryModal = false;
     private ClientDto currentClient = new();
