@@ -9,6 +9,7 @@ namespace Dashboard.Shared.DTOs
         public DateTime DateFacture { get; set; } = DateTime.UtcNow;
         public int ClientId { get; set; }
         public string? ClientName { get; set; }
+        public string? ClientMatricule { get; set; }
         public decimal TotalHT { get; set; }
         public decimal TotalTVA { get; set; }
         public decimal TotalTTC { get; set; }

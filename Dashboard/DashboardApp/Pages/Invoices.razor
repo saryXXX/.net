@@ -64,6 +64,9 @@
                                         <button class="btn btn-icon btn-light btn-sm rounded-circle me-1" title="View/Edit" @onclick='() => Navigation.NavigateTo($"/invoices/edit/{inv.Id}")'>
                                             <i class="bi bi-eye"></i>
                                         </button>
+                                        <button class="btn btn-icon btn-primary btn-sm rounded-circle me-1" title="Print/Preview" @onclick='() => Navigation.NavigateTo($"/invoices/print/{inv.Id}")'>
+                                            <i class="bi bi-printer"></i>
+                                        </button>
                                         @if (inv.Statut == "Brouillon")
                                         {
                                             <button class="btn btn-icon btn-light-success btn-sm rounded-circle me-1" title="Validate" @onclick="() => ValidateInvoice(inv.Id)">
