@@ -1,8 +1,195 @@
 @page "/"
 @attribute [Authorize]
+@using DashboardApp.Services
+@using Dashboard.Shared.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard - Sary System</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800 fw-bold">Executive Overview</h1>
+            <p class="text-muted small mb-0">Welcome back! Here is what's happening today.</p>
+        </div>
+        <div class="text-muted small">
+            <i class="bi bi-calendar3 me-1"></i> @DateTime.Now.ToString("dd MMMM yyyy")
+        </div>
+    </div>
 
-Welcome to your new app.
+    @if (stats == null)
+    {
+        <div class="d-flex justify-content-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Summary Stats -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 card-ca h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-white text-primary rounded-3 shadow-sm">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success rounded-pill">+12.5%</span>
+                    </div>
+                    <h6 class="text-uppercase small fw-bold text-muted mb-1">Total Revenue</h6>
+                    <h3 class="fw-bold mb-0">@stats.TotalCA.ToString("N3") <small class="fs-6 fw-normal">TND</small></h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-light text-success rounded-3">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase small fw-bold text-muted mb-1">Invoices</h6>
+                    <h3 class="fw-bold mb-0">@stats.TotalFactures</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-light text-warning rounded-3">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        @if (stats.ProduitsEnAlerte > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill">@stats.ProduitsEnAlerte Alerts</span>
+                        }
+                    </div>
+                    <h6 class="text-uppercase small fw-bold text-muted mb-1">Low Stock Items</h6>
+                    <h3 class="fw-bold mb-0">@stats.ProduitsEnAlerte</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-white bg-opacity-25 text-white rounded-3">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-uppercase small fw-bold text-white text-opacity-75 mb-1">Total Clients</h6>
+                    <h3 class="fw-bold mb-0">@totalClients</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Recent Activity -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Top Performing Products</h5>
+                        <button class="btn btn-sm btn-light rounded-pill px-3" @onclick='() => Navigation.NavigateTo("/analytics")'>View All</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light small text-muted text-uppercase">
+                                    <tr>
+                                        <th class="ps-4">Product Name</th>
+                                        <th class="text-end">Total Sold</th>
+                                        <th class="text-end pe-4">Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in stats.TopProducts.Take(5))
+                                    {
+                                        <tr>
+                                            <td class="ps-4 py-3">
+                                                <div class="fw-bold">@p.ProductName</div>
+                                            </td>
+                                            <td class="text-end">@p.TotalSold</td>
+                                            <td class="text-end pe-4 fw-bold">@p.TotalRevenue.ToString("N3") TND</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-4">Quick Actions</h5>
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-outline-primary rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/invoices/new")'>
+                            <div class="icon-box bg-primary bg-opacity-10 text-primary me-3 rounded-3">
+                                <i class="bi bi-file-earmark-plus"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">New Invoice</div>
+                                <div class="x-small text-muted">Generate a new customer bill</div>
+                            </div>
+                        </button>
+                        <button class="btn btn-outline-success rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/products")'>
+                            <div class="icon-box bg-success bg-opacity-10 text-success me-3 rounded-3">
+                                <i class="bi bi-plus-circle"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">Add Product</div>
+                                <div class="x-small text-muted">Register a new item in catalog</div>
+                            </div>
+                        </button>
+                        <button class="btn btn-outline-info rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/clients")'>
+                            <div class="icon-box bg-info bg-opacity-10 text-info me-3 rounded-3">
+                                <i class="bi bi-person-plus"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">New Client</div>
+                                <div class="x-small text-muted">Onboard a new customer</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="mt-auto pt-4 text-center">
+                        <img src="https://illustrations.popsy.co/amber/success.svg" alt="Success" style="height: 120px;" class="mb-3 opacity-75" />
+                        <p class="small text-muted">Keep up the great work! Your business is growing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .icon-box {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .card-ca { background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); }
+    .x-small { font-size: 0.75rem; }
+    .bg-success-subtle { background-color: #dcfce7; }
+</style>
+
+@code {
+    private DashboardStatsDto? stats;
+    private int totalClients;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            stats = await Http.GetFromJsonAsync<DashboardStatsDto>("api/analytics/dashboard");
+            var clients = await Http.GetFromJsonAsync<List<ClientDto>>("api/clients");
+            totalClients = clients?.Count ?? 0;
+        }
+        catch (Exception)
+        {
+            stats = new DashboardStatsDto();
+        }
+    }
+}
