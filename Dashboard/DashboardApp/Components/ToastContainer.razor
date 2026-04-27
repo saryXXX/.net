@@ -1,0 +1,112 @@
+@using DashboardApp.Services
+@inject ToastService ToastService
+@implements IDisposable
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000">
+    @foreach (var toast in toasts)
+    {
+        <div class="toast show animate-slide-in @GetToastClass(toast.Type)" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header border-0 bg-transparent py-2">
+                <div class="toast-icon me-2 @GetIconClass(toast.Type)">
+                    <i class="@GetIcon(toast.Type)"></i>
+                </div>
+                <strong class="me-auto fw-bold">@toast.Title</strong>
+                <small class="text-muted">just now</small>
+                <button type="button" class="btn-close shadow-none" @onclick="() => RemoveToast(toast.Id)"></button>
+            </div>
+            <div class="toast-body pt-0 pb-3 ps-5 small opacity-75">
+                @toast.Message
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .toast {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1);
+        margin-bottom: 0.75rem;
+        min-width: 300px;
+    }
+
+    .toast-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .icon-success { background-color: #dcfce7; color: #16a34a; }
+    .icon-error { background-color: #fee2e2; color: #dc2626; }
+    .icon-warning { background-color: #fef3c7; color: #d97706; }
+    .icon-info { background-color: #e0f2fe; color: #0284c7; }
+
+    .animate-slide-in {
+        animation: slideIn 0.3s ease-out forwards;
+    }
+
+    @@keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+
+@code {
+    private List<ToastMessage> toasts = new();
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += HandleToast;
+    }
+
+    private void HandleToast(ToastMessage toast)
+    {
+        toasts.Add(toast);
+        StateHasChanged();
+
+        // Auto-remove after 5 seconds
+        _ = Task.Delay(5000).ContinueWith(_ => RemoveToast(toast.Id));
+    }
+
+    private void RemoveToast(Guid id)
+    {
+        var toast = toasts.FirstOrDefault(t => t.Id == id);
+        if (toast != null)
+        {
+            toasts.Remove(toast);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetToastClass(ToastType type) => type switch {
+        ToastType.Success => "border-success-subtle",
+        ToastType.Error => "border-danger-subtle",
+        ToastType.Warning => "border-warning-subtle",
+        _ => "border-info-subtle"
+    };
+
+    private string GetIconClass(ToastType type) => type switch {
+        ToastType.Success => "icon-success",
+        ToastType.Error => "icon-error",
+        ToastType.Warning => "icon-warning",
+        _ => "icon-info"
+    };
+
+    private string GetIcon(ToastType type) => type switch {
+        ToastType.Success => "bi bi-check-lg",
+        ToastType.Error => "bi bi-x-lg",
+        ToastType.Warning => "bi bi-exclamation-triangle",
+        _ => "bi bi-info-circle"
+    };
+
+    public void Dispose()
+    {
+        ToastService.OnShow -= HandleToast;
+    }
+}
