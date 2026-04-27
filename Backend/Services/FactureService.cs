@@ -32,6 +32,7 @@ namespace Backend.Services
                 .Include(f => f.Client)
                 .Include(f => f.Lignes)
                     .ThenInclude(l => l.Produit)
+                .OrderByDescending(f => f.Id) // Newest first
                 .ToListAsync();
             return Result<IEnumerable<Facture>>.Success(factures);
         }
@@ -84,7 +85,10 @@ namespace Backend.Services
                     facture.Numero = $"FACT-{DateTime.UtcNow:yyyy-MM}-{count:D4}";
                 }
 
-                _context.Factures.Add(facture);
+                if (facture.Id == 0)
+                {
+                    _context.Factures.Add(facture);
+                }
                 await _context.SaveChangesAsync();
 
                 return Result<Facture>.Success(facture);

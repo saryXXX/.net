@@ -69,7 +69,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-primary text-white">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-info text-white">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="icon-box bg-white bg-opacity-25 text-white rounded-3">
                             <i class="bi bi-people"></i>
@@ -82,20 +82,102 @@
         </div>
 
         <div class="row g-4">
-            <!-- Recent Activity -->
+            <!-- Quick Actions -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-4">Quick Actions</h5>
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-outline-brand-green rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/invoices/new")'>
+                            <div class="icon-box bg-brand-green-subtle text-brand-green me-3 rounded-3">
+                                <i class="bi bi-file-earmark-plus"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">New Invoice</div>
+                                <div class="x-small text-muted">Generate a new customer bill</div>
+                            </div>
+                        </button>
+                        <button class="btn btn-outline-brand-green rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/products")'>
+                            <div class="icon-box bg-brand-green-subtle text-brand-green me-3 rounded-3">
+                                <i class="bi bi-plus-circle"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">Add Product</div>
+                                <div class="x-small text-muted">Register a new item in catalog</div>
+                            </div>
+                        </button>
+                        <button class="btn btn-outline-brand-green rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/clients")'>
+                            <div class="icon-box bg-brand-green-subtle text-brand-green me-3 rounded-3">
+                                <i class="bi bi-person-plus"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">New Client</div>
+                                <div class="x-small text-muted">Onboard a new customer</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Evolution Chart -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4">
+                        <h5 class="fw-bold mb-0">Revenue Evolution (CA)</h5>
+                    </div>
+                    <div class="card-body">
+                        <ApexChart TItem="ChartDataDto" XAxisType="XAxisType.Category">
+                            <ApexPointSeries TItem="ChartDataDto" 
+                                           Items="stats.TurnoverHistory" 
+                                           Name="Revenue" 
+                                           SeriesType="SeriesType.Area"
+                                           XValue="@(e => e.Label)" 
+                                           YValue="@(e => e.Value)" 
+                                           Color="#249863" />
+                        </ApexChart>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VAT Distribution -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4">
+                        <h5 class="fw-bold mb-0">VAT Distribution</h5>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        @if (fiscalSummary?.TvaDetails?.Any() == true)
+                        {
+                            <ApexChart TItem="TvaRateDto">
+                                <ApexPointSeries TItem="TvaRateDto" 
+                                                Items="fiscalSummary.TvaDetails" 
+                                                Name="VAT Amount" 
+                                                SeriesType="SeriesType.Donut" 
+                                                XValue="@(e => $"{e.Rate}%")" 
+                                                YValue="@(e => e.TotalTva)" />
+                            </ApexChart>
+                        }
+                        else
+                        {
+                            <p class="text-muted small">No tax data available</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Products Table -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
                     <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">Top Performing Products</h5>
-                        <button class="btn btn-sm btn-light rounded-pill px-3" @onclick='() => Navigation.NavigateTo("/analytics")'>View All</button>
+                        <button class="btn btn-sm btn-light rounded-pill px-3" @onclick='() => Navigation.NavigateTo("/products")'>View Catalog</button>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light small text-muted text-uppercase">
+                                <thead class="bg-dark text-white x-small text-uppercase">
                                     <tr>
-                                        <th class="ps-4">Product Name</th>
-                                        <th class="text-end">Total Sold</th>
+                                        <th class="ps-4 py-3">Product Name</th>
+                                        <th class="text-end">Sold</th>
                                         <th class="text-end pe-4">Revenue</th>
                                     </tr>
                                 </thead>
@@ -107,7 +189,7 @@
                                                 <div class="fw-bold">@p.ProductName</div>
                                             </td>
                                             <td class="text-end">@p.TotalSold</td>
-                                            <td class="text-end pe-4 fw-bold">@p.TotalRevenue.ToString("N3") TND</td>
+                                            <td class="text-end pe-4 fw-bold text-brand-green">@p.TotalRevenue.ToString("N3") TND</td>
                                         </tr>
                                     }
                                 </tbody>
@@ -117,47 +199,30 @@
                 </div>
             </div>
 
-            <!-- Quick Actions -->
+            <!-- Inventory Status -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-                    <h5 class="fw-bold mb-4">Quick Actions</h5>
-                    <div class="d-grid gap-3">
-                        <button class="btn btn-outline-primary rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/invoices/new")'>
-                            <div class="icon-box bg-primary bg-opacity-10 text-primary me-3 rounded-3">
-                                <i class="bi bi-file-earmark-plus"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">New Invoice</div>
-                                <div class="x-small text-muted">Generate a new customer bill</div>
-                            </div>
-                        </button>
-                        <button class="btn btn-outline-success rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/products")'>
-                            <div class="icon-box bg-success bg-opacity-10 text-success me-3 rounded-3">
-                                <i class="bi bi-plus-circle"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">Add Product</div>
-                                <div class="x-small text-muted">Register a new item in catalog</div>
-                            </div>
-                        </button>
-                        <button class="btn btn-outline-info rounded-4 p-3 text-start d-flex align-items-center" @onclick='() => Navigation.NavigateTo("/clients")'>
-                            <div class="icon-box bg-info bg-opacity-10 text-info me-3 rounded-3">
-                                <i class="bi bi-person-plus"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">New Client</div>
-                                <div class="x-small text-muted">Onboard a new customer</div>
-                            </div>
-                        </button>
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4">
+                        <h5 class="fw-bold mb-0">Inventory Health</h5>
                     </div>
-
-                    <div class="mt-auto pt-4 text-center">
-                        <img src="https://illustrations.popsy.co/amber/success.svg" alt="Success" style="height: 120px;" class="mb-3 opacity-75" />
-                        <p class="small text-muted">Keep up the great work! Your business is growing.</p>
+                    <div class="card-body">
+                        @if (inventorySummary?.StatusBreakdown?.Any() == true)
+                        {
+                            <ApexChart TItem="StockStatusDto">
+                                <ApexPointSeries TItem="StockStatusDto" 
+                                                Items="inventorySummary.StatusBreakdown" 
+                                                Name="Items" 
+                                                SeriesType="SeriesType.Bar" 
+                                                XValue="@(e => e.Status)" 
+                                                YValue="@(e => (decimal)e.Count)"
+                                                Color="#111111" />
+                            </ApexChart>
+                        }
                     </div>
                 </div>
             </div>
         </div>
+
     }
 </div>
 
@@ -170,27 +235,53 @@
         justify-content: center;
         font-size: 1.2rem;
     }
-    .card-ca { background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); }
+    .card-ca { background: #111111; color: white; }
+    .card-ca .text-muted { color: rgba(255, 255, 255, 0.6) !important; }
     .x-small { font-size: 0.75rem; }
-    .bg-success-subtle { background-color: #dcfce7; }
+    .bg-success-subtle { background-color: #dcfce7; color: #16a34a; }
+    .bg-brand-green-subtle { background-color: rgba(36, 152, 99, 0.1); }
+    .text-brand-green { color: #249863; }
+    .btn-outline-brand-green {
+        border-color: rgba(36, 152, 99, 0.2);
+        color: #333;
+    }
+    .btn-outline-brand-green:hover {
+        border-color: #249863;
+        background-color: rgba(36, 152, 99, 0.05);
+        color: #111;
+    }
 </style>
+
 
 @code {
     private DashboardStatsDto? stats;
+    private FiscalSummaryDto? fiscalSummary;
+    private InventorySummaryDto? inventorySummary;
     private int totalClients;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            stats = await Http.GetFromJsonAsync<DashboardStatsDto>("api/analytics/dashboard");
-            var clients = await Http.GetFromJsonAsync<List<ClientDto>>("api/clients");
-            totalClients = clients?.Count ?? 0;
+            var statsTask = Http.GetFromJsonAsync<DashboardStatsDto>("api/analytics/dashboard");
+            var fiscalTask = Http.GetFromJsonAsync<FiscalSummaryDto>("api/analytics/fiscal");
+            var inventoryTask = Http.GetFromJsonAsync<InventorySummaryDto>("api/analytics/inventory");
+            var clientsTask = Http.GetFromJsonAsync<List<ClientDto>>("api/clients");
+
+            await Task.WhenAll(statsTask, fiscalTask, inventoryTask, clientsTask);
+
+            stats = await statsTask;
+            fiscalSummary = await fiscalTask;
+            inventorySummary = await inventoryTask;
+            totalClients = (await clientsTask)?.Count ?? 0;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Initialize with defaults to remove Loading state
+            Console.WriteLine($"Error fetching dashboard data: {ex.Message}");
             stats = new DashboardStatsDto() { TurnoverHistory = new(), TopProducts = new() };
+            fiscalSummary = new FiscalSummaryDto() { TvaDetails = new() };
+            inventorySummary = new InventorySummaryDto() { StatusBreakdown = new() };
         }
     }
 }
+

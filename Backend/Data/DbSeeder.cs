@@ -8,11 +8,15 @@ namespace Backend.Data
     {
         public static async Task SeedAsync(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
-            // 0. Default Admin User
-            if (!await userManager.Users.AnyAsync())
+            // 0. Admin Users
+            var adminEmails = new[] { "admin@factun.tn", "nada@factun.tn", "sary@factun.tn", "helmi@factun.tn" };
+            foreach (var email in adminEmails)
             {
-                var admin = new IdentityUser { UserName = "admin@sary.tn", Email = "admin@sary.tn", EmailConfirmed = true };
-                await userManager.CreateAsync(admin, "Admin123!");
+                if (await userManager.FindByEmailAsync(email) == null)
+                {
+                    var user = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
+                    await userManager.CreateAsync(user, "Admin123!");
+                }
             }
 
             // 1. Fiscal Parameters
