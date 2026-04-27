@@ -10,16 +10,16 @@
 <div class="login-container">
     <div class="glass-login-card">
         <div class="text-center mb-4">
-            <div class="logo-circle mb-3">
-                <i class="bi bi-shield-lock-fill fs-1 text-primary"></i>
+            <div class="logo-box mb-3">
+                <img src="logo.png" alt="Factun Logo" style="height: 60px; width: auto;" />
             </div>
-            <h2 class="fw-bold">Welcome Back</h2>
-            <p class="text-muted">Enter your credentials to access the dashboard</p>
+            <h2 class="fw-bold text-white">Welcome to FACTUN</h2>
+            <p class="text-muted small">Système de Facturation et de Gestion de Stock</p>
         </div>
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <div class="alert alert-danger border-0 shadow-sm mb-4 py-2 small">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i> @errorMessage
             </div>
         }
@@ -28,27 +28,27 @@
             <DataAnnotationsValidator />
             
             <div class="mb-3">
-                <label class="form-label small text-uppercase fw-bold text-muted">Email Address</label>
+                <label class="form-label x-small text-uppercase fw-bold text-muted-custom">Email Address</label>
                 <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-envelope text-muted"></i></span>
-                    <InputText @bind-Value="loginModel.Email" class="form-control border-start-0" placeholder="name@example.com" />
+                    <span class="input-group-text bg-transparent border-secondary-custom border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                    <InputText @bind-Value="loginModel.Email" class="form-control bg-transparent text-white border-secondary-custom border-start-0" placeholder="name@factun.tn" />
                 </div>
                 <ValidationMessage For="@(() => loginModel.Email)" class="text-danger small" />
             </div>
 
             <div class="mb-4">
                 <div class="d-flex justify-content-between">
-                    <label class="form-label small text-uppercase fw-bold text-muted">Password</label>
-                    <a href="#" class="small text-decoration-none">Forgot?</a>
+                    <label class="form-label x-small text-uppercase fw-bold text-muted-custom">Password</label>
+                    <a href="#" class="x-small text-decoration-none text-green">Forgot?</a>
                 </div>
                 <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-lock text-muted"></i></span>
-                    <InputText @bind-Value="loginModel.Password" type="password" class="form-control border-start-0" placeholder="••••••••" />
+                    <span class="input-group-text bg-transparent border-secondary-custom border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                    <InputText @bind-Value="loginModel.Password" type="password" class="form-control bg-transparent text-white border-secondary-custom border-start-0" placeholder="••••••••" />
                 </div>
                 <ValidationMessage For="@(() => loginModel.Password)" class="text-danger small" />
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm" disabled="@isSubmitting">
+            <button type="submit" class="btn btn-green w-100 py-2 fw-bold shadow-sm" disabled="@isSubmitting">
                 @if (isSubmitting)
                 {
                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -62,7 +62,7 @@
         </EditForm>
 
         <div class="mt-4 text-center">
-            <p class="small text-muted">Don't have an account? <a href="#" class="text-primary fw-bold text-decoration-none">Contact Admin</a></p>
+            <p class="small text-muted">Secured by Factun Tunisia © 2024</p>
         </div>
     </div>
 </div>
@@ -74,59 +74,74 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: radial-gradient(circle at top right, #f0f7ff, #ffffff, #eef2ff);
+        background: #000000;
         position: fixed;
         top: 0;
         left: 0;
     }
 
     .glass-login-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: #111111;
+        border: 1px solid #222222;
         padding: 3rem;
         border-radius: 24px;
         width: 100%;
-        max-width: 450px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        max-width: 420px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    .logo-circle {
-        width: 64px;
-        height: 64px;
-        background: white;
-        border-radius: 16px;
+    .logo-box {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .border-secondary-custom {
+        border-color: #333333 !important;
+    }
+
+    .text-muted-custom {
+        color: #666666 !important;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
     }
 
     .form-control {
         padding: 0.75rem 1rem;
         border-radius: 10px;
-        background-color: rgba(255, 255, 255, 0.5);
     }
 
     .form-control:focus {
-        background-color: #fff;
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        background-color: #1a1a1a !important;
+        border-color: #249863 !important;
+        box-shadow: 0 0 0 4px rgba(36, 152, 99, 0.1);
+        color: white !important;
     }
 
-    .input-group-text {
-        border-radius: 10px;
-    }
-
-    .btn-primary {
+    .btn-green {
+        background-color: #249863;
+        color: white;
         border-radius: 12px;
         transition: all 0.2s;
+        border: none;
     }
 
-    .btn-primary:hover {
+    .btn-green:hover {
+        background-color: #1e7d51;
         transform: translateY(-2px);
-        box-shadow: 0 8px 15px rgba(13, 110, 253, 0.2);
+        box-shadow: 0 8px 15px rgba(36, 152, 99, 0.2);
+        color: white;
+    }
+
+    .btn-green:disabled {
+        opacity: 0.7;
+        background-color: #1e7d51;
+    }
+
+    .text-green {
+        color: #249863;
     }
 </style>
 
