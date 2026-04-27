@@ -9,7 +9,7 @@ namespace Backend.Models
 
         [Required]
         [StringLength(50)]
-        public string Numero { get; set; } = string.Empty;
+        public string Numero { get; set; } = "TEMP-" + Guid.NewGuid().ToString().Substring(0, 8);
 
         public DateTime DateFacture { get; set; } = DateTime.UtcNow;
 

@@ -80,11 +80,77 @@ namespace Backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Facture facture)
+        public async Task<IActionResult> Create([FromBody] InvoiceDto dto)
         {
+            var facture = new Facture
+            {
+                ClientId = dto.ClientId,
+                DateFacture = dto.DateFacture == default ? DateTime.UtcNow : dto.DateFacture,
+                Statut = "Brouillon",
+                Lignes = dto.Lignes.Select(l => new LigneFacture
+                {
+                    ProduitId = l.ProduitId,
+                    Quantite = l.Quantite,
+                    PrixUnitaireHT = l.PrixUnitaireHT,
+                    TauxTVA = l.TauxTVA
+                }).ToList()
+            };
+
             var result = await _factureService.CreateFactureAsync(facture);
             if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
-            return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
+            
+            // Map back to DTO for response to avoid circular references
+            var responseDto = new InvoiceDto
+            {
+                Id = result.Value.Id,
+                Numero = result.Value.Numero,
+                DateFacture = result.Value.DateFacture,
+                ClientId = result.Value.ClientId,
+                TotalTTC = result.Value.TotalTTC,
+                Statut = result.Value.Statut
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, responseDto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] InvoiceDto dto)
+        {
+            var result = await _factureService.GetByIdAsync(id);
+            if (!result.IsSuccess || result.Value == null) return NotFound(result.Error);
+
+            var facture = result.Value;
+            if (facture.Statut != "Brouillon") return BadRequest("Cannot edit a validated invoice.");
+
+            var oldStatut = facture.Statut;
+            facture.ClientId = dto.ClientId;
+            facture.DateFacture = dto.DateFacture;
+            facture.Statut = dto.Statut;
+            
+            // Simple approach: clear lines and re-add (if not validated)
+            facture.Lignes.Clear();
+            foreach (var l in dto.Lignes)
+            {
+                facture.Lignes.Add(new LigneFacture
+                {
+                    ProduitId = l.ProduitId,
+                    Quantite = l.Quantite,
+                    PrixUnitaireHT = l.PrixUnitaireHT,
+                    TauxTVA = l.TauxTVA
+                });
+            }
+
+            var saveResult = await _factureService.CreateFactureAsync(facture); 
+            if (!saveResult.IsSuccess) return BadRequest(saveResult.Error);
+
+            // If status changed to Validée and it wasn't before, trigger stock adjustment
+            if (oldStatut == "Brouillon" && dto.Statut == "Validée")
+            {
+                var validationResult = await _factureService.ValidateFactureAsync(id);
+                if (!validationResult.IsSuccess) return BadRequest("Saved but failed to adjust stock: " + validationResult.Error);
+            }
+
+            return Ok();
         }
 
         [HttpPut("{id}/validate")]

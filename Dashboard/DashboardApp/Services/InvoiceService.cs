@@ -8,6 +8,7 @@ namespace DashboardApp.Services
         Task<List<InvoiceDto>> GetAllAsync();
         Task<InvoiceDto?> GetByIdAsync(int id);
         Task<bool> CreateAsync(InvoiceDto invoice);
+        Task<bool> UpdateAsync(InvoiceDto invoice);
         Task<bool> ValidateAsync(int id);
         Task<bool> DeleteAsync(int id);
     }
@@ -42,6 +43,12 @@ namespace DashboardApp.Services
         public async Task<bool> CreateAsync(InvoiceDto invoice)
         {
             var response = await _http.PostAsJsonAsync("api/factures", invoice);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UpdateAsync(InvoiceDto invoice)
+        {
+            var response = await _http.PutAsJsonAsync($"api/factures/{invoice.Id}", invoice);
             return response.IsSuccessStatusCode;
         }
 

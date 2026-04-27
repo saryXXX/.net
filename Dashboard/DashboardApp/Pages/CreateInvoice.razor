@@ -127,26 +127,26 @@
                         <span class="fw-bold h5 mb-0 text-primary">@invoice.TotalTTC.ToString("N3") TND</span>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Invoice Status</label>
+                        <select class="form-select rounded-3 @(invoice.Statut == "Validée" || invoice.Statut == "Payée" ? "border-success bg-light" : "")" @bind="invoice.Statut">
+                            <option value="Brouillon">Brouillon</option>
+                            <option value="Validée">Validée</option>
+                            <option value="Payée">Payée</option>
+                            <option value="Annulée">Annulée</option>
+                        </select>
+                        <p class="x-small text-muted mt-2 mb-0">Note: Saving as 'Validée' will lock items and update stock levels.</p>
+                    </div>
+
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold">
-                            <i class="bi bi-save me-2"></i> Save Invoice
+                        <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold shadow-sm">
+                            <i class="bi bi-save me-2"></i> Save Changes
                         </button>
                         <button type="button" class="btn btn-light rounded-pill py-2" @onclick='() => Navigation.NavigateTo("/invoices")'>
                             Cancel
                         </button>
                     </div>
                 </div>
-
-                @if (invoice.Statut == "Brouillon" && Id != 0)
-                {
-                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-success-subtle text-success">
-                        <h6 class="fw-bold mb-2">Validation</h6>
-                        <p class="small mb-3">Validating this invoice will lock it and decrement the stock levels of all products.</p>
-                        <button type="button" class="btn btn-success rounded-pill w-100 fw-bold" @onclick="() => ValidateInvoice()">
-                            Confirm & Validate
-                        </button>
-                    </div>
-                }
             </div>
         </div>
     </EditForm>
@@ -233,7 +233,16 @@
             return;
         }
 
-        bool success = await InvoiceService.CreateAsync(invoice);
+        bool success;
+        if (Id == 0)
+        {
+            success = await InvoiceService.CreateAsync(invoice);
+        }
+        else
+        {
+            success = await InvoiceService.UpdateAsync(invoice);
+        }
+
         if (success)
         {
             ToastService.ShowSuccess("Invoice saved successfully.");
