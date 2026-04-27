@@ -22,7 +22,7 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _clientService.GetAllAsync();
-            if (!result.IsSuccess) return BadRequest(result.Error);
+            if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
 
             var dtos = result.Value.Select(c => new ClientDto
             {
@@ -43,7 +43,7 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _clientService.GetByIdAsync(id);
-            if (!result.IsSuccess) return NotFound(result.Error);
+            if (!result.IsSuccess || result.Value == null) return NotFound(result.Error);
 
             var c = result.Value;
             var dto = new ClientDto
@@ -75,7 +75,7 @@ namespace Backend.Controllers
             };
 
             var result = await _clientService.CreateAsync(client);
-            if (!result.IsSuccess) return BadRequest(result.Error);
+            if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
             return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
         }
 

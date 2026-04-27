@@ -124,8 +124,8 @@ namespace Backend.Services
                     .Include(l => l.Facture)
                     .Where(l => !l.IsDeleted && !l.Facture!.IsDeleted && 
                                (l.Facture.Statut == "Validée" || l.Facture.Statut == "Payée"))
-                    .Where(l => (!startDate.HasValue || l.Facture.DateFacture >= startDate.Value) &&
-                               (!endDate.HasValue || l.Facture.DateFacture <= endDate.Value))
+                    .Where(l => (!startDate.HasValue || l.Facture!.DateFacture >= startDate.Value) &&
+                               (!endDate.HasValue || l.Facture!.DateFacture <= endDate.Value))
                     .GroupBy(l => l.TauxTVA)
                     .Select(g => new TvaRateDto
                     {

@@ -22,17 +22,17 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _produitService.GetAllAsync();
-            if (!result.IsSuccess) return BadRequest(result.Error);
+            if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
 
             var dtos = result.Value.Select(p => new ProduitDto
             {
                 Id = p.Id,
                 Nom = p.Nom,
-                Description = p.Description,
                 PrixUnitaireHT = p.PrixUnitaireHT,
                 TauxTVA = p.TauxTVA,
                 StockActuel = p.StockActuel,
-                SeuilAlerte = p.SeuilAlerte
+                SeuilAlerte = p.SeuilAlerte,
+                Actif = p.Actif
             }).ToList();
 
             return Ok(dtos);
@@ -42,18 +42,18 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _produitService.GetByIdAsync(id);
-            if (!result.IsSuccess) return NotFound(result.Error);
+            if (!result.IsSuccess || result.Value == null) return NotFound(result.Error);
 
             var p = result.Value;
             var dto = new ProduitDto
             {
                 Id = p.Id,
                 Nom = p.Nom,
-                Description = p.Description,
                 PrixUnitaireHT = p.PrixUnitaireHT,
                 TauxTVA = p.TauxTVA,
                 StockActuel = p.StockActuel,
-                SeuilAlerte = p.SeuilAlerte
+                SeuilAlerte = p.SeuilAlerte,
+                Actif = p.Actif
             };
 
             return Ok(dto);
@@ -65,15 +65,15 @@ namespace Backend.Controllers
             var produit = new Produit
             {
                 Nom = dto.Nom,
-                Description = dto.Description,
                 PrixUnitaireHT = dto.PrixUnitaireHT,
                 TauxTVA = dto.TauxTVA,
                 StockActuel = dto.StockActuel,
-                SeuilAlerte = dto.SeuilAlerte
+                SeuilAlerte = dto.SeuilAlerte,
+                Actif = dto.Actif
             };
 
             var result = await _produitService.CreateAsync(produit);
-            if (!result.IsSuccess) return BadRequest(result.Error);
+            if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
             return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
         }
 
@@ -86,11 +86,11 @@ namespace Backend.Controllers
             {
                 Id = dto.Id,
                 Nom = dto.Nom,
-                Description = dto.Description,
                 PrixUnitaireHT = dto.PrixUnitaireHT,
                 TauxTVA = dto.TauxTVA,
                 StockActuel = dto.StockActuel,
-                SeuilAlerte = dto.SeuilAlerte
+                SeuilAlerte = dto.SeuilAlerte,
+                Actif = dto.Actif
             };
 
             var result = await _produitService.UpdateAsync(produit);

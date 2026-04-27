@@ -22,7 +22,7 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = await _factureService.GetAllAsync();
-            if (!result.IsSuccess) return BadRequest(result.Error);
+            if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
 
             var dtos = result.Value.Select(f => new InvoiceDto
             {
@@ -45,7 +45,7 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _factureService.GetByIdAsync(id);
-            if (!result.IsSuccess) return NotFound(result.Error);
+            if (!result.IsSuccess || result.Value == null) return NotFound(result.Error);
 
             var f = result.Value;
             var dto = new InvoiceDto
@@ -81,7 +81,7 @@ namespace Backend.Controllers
         public async Task<IActionResult> Create([FromBody] Facture facture)
         {
             var result = await _factureService.CreateFactureAsync(facture);
-            if (!result.IsSuccess) return BadRequest(result.Error);
+            if (!result.IsSuccess || result.Value == null) return BadRequest(result.Error);
             return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
         }
 
